@@ -1,0 +1,52 @@
+[
+  {
+    "nombre": "Chevrolet Optra",
+    "placa": "AA123BC",
+    "estado": "Funcional"
+  },
+  {
+    "nombre": "Chevrolet Aveo",
+    "placa": "AB456CD",
+    "estado": "Dañado"
+  },
+  {
+    "nombre": "Chevrolet Corsa",
+    "placa": "AC789EF",
+    "estado": "Funcional"
+  },
+  {
+    "nombre": "Toyota Corolla",
+    "placa": "AD234GH",
+    "estado": "Funcional"
+  },
+  {
+    "nombre": "Ford Fiesta",
+    "placa": "AE567IJ",
+    "estado": "Dañado"
+  },
+  {
+    "nombre": "Kia Rio",
+    "placa": "AF890KL",
+    "estado": "Funcional"
+  },
+  {
+    "nombre": "Hyundai Elantra",
+    "placa": "AG321MN",
+    "estado": "Funcional"
+  },
+  {
+    "nombre": "Renault Logan",
+    "placa": "AH654OP",
+    "estado": "Funcional"
+  },
+  {
+    "nombre": "Nissan Sentra",
+    "placa": "AJ987QR",
+    "estado": "Dañado"
+  },
+  {
+    "nombre": "Mitsubishi Lancer",
+    "placa": "AK210ST",
+    "estado": "Funcional"
+  }
+]
