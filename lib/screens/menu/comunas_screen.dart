@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:http/http.dart' as http;
+import 'comuna_detalle_screen.dart';
 
 class ComunasScreen extends StatefulWidget {
   @override
@@ -9,26 +10,37 @@ class ComunasScreen extends StatefulWidget {
 
 class _ComunasScreenState extends State<ComunasScreen> {
   List comunas = [];
-  int totalVoceros = 0;
+  int totalConsejos = 0;
+  int totalVotantes = 0;
 
   @override
   void initState() {
     super.initState();
-    loadLocalJson();
+    fetchComunas();
   }
 
-  Future<void> loadLocalJson() async {
-    final String response = await rootBundle.loadString('lib/screens/menu/comunas.json');
-    final List data = json.decode(response);
+Future<void> fetchComunas() async {
+  final response = await http.get(Uri.parse(
+      'https://main.d216v5k7f3pzsl.amplifyapp.com/api/comunas'));
 
-  int voceroCount = data.fold(0, (int sum, comuna) => sum + (comuna['voceros'] as int? ?? 0));
+  if (response.statusCode == 200) {
+    final List data = json.decode(response.body);
 
+    int consejos = data.fold(
+        0, (sum, item) => sum + ((item['cantidadConsejosComunales'] ?? 0) as int));
+    int votantes = data.fold(
+        0, (sum, item) => sum + ((item['poblacionVotante'] ?? 0) as int));
 
     setState(() {
       comunas = data;
-      totalVoceros = voceroCount;
+      totalConsejos = consejos;
+      totalVotantes = votantes;
     });
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al cargar las comunas')));
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +54,7 @@ class _ComunasScreenState extends State<ComunasScreen> {
                 _buildStatsCard(),
                 SizedBox(height: 16),
                 Text(
-                  'Lista de Juntas Comunales',
+                  'Lista de Comunas',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 ListView.builder(
@@ -53,10 +65,20 @@ class _ComunasScreenState extends State<ComunasScreen> {
                     final comuna = comunas[index];
                     return Card(
                       elevation: 3,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                       child: ListTile(
-                        title: Text(comuna['nombre']),
-                        subtitle: Text(comuna['direccion']),
+                        title: Text(comuna['nombre'] ?? 'Sin nombre'),
+                        subtitle: Text(
+                            comuna['parroquiaRelation']?['nombre'] ?? ''),
+                        trailing: Icon(Icons.arrow_forward_ios),
+                        onTap: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => ComunaDetalleScreen(
+                                      comuna: comuna)));
+                        },
                       ),
                     );
                   },
@@ -70,13 +92,16 @@ class _ComunasScreenState extends State<ComunasScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _statCard('Juntas Comunales', comunas.length.toString(), Icons.apartment, Colors.blueAccent),
-        _statCard('Voceros', totalVoceros.toString(), Icons.record_voice_over, Colors.deepPurple),
+        _statCard('Consejos Comunales', totalConsejos.toString(),
+            Icons.groups, Colors.blueAccent),
+        _statCard('Población Votante', totalVotantes.toString(),
+            Icons.how_to_vote, Colors.deepPurple),
       ],
     );
   }
 
-  Widget _statCard(String title, String value, IconData icon, Color color) {
+  Widget _statCard(
+      String title, String value, IconData icon, Color color) {
     return Expanded(
       child: Container(
         margin: EdgeInsets.symmetric(horizontal: 8),
@@ -90,7 +115,11 @@ class _ComunasScreenState extends State<ComunasScreen> {
           children: [
             Icon(icon, color: color, size: 30),
             SizedBox(height: 8),
-            Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
+            Text(value,
+                style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: color)),
             SizedBox(height: 4),
             Text(title, style: TextStyle(fontSize: 14, color: color)),
           ],

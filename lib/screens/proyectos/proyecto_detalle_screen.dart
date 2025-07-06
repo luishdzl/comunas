@@ -13,40 +13,61 @@ class ProyectoDetalleScreen extends StatelessWidget {
         title: Text(proyecto['nombre']),
         elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            _buildInfoCard(
-              icon: Icons.assignment,
-              title: "Nombre del proyecto",
-              value: proyecto['nombre'],
-              color: Colors.blueAccent,
-            ),
-            SizedBox(height: 16),
-            _buildInfoCard(
-              icon: Icons.location_on,
-              title: "Dirección",
-              value: proyecto['direccion'],
-              color: Colors.green,
-            ),
-            SizedBox(height: 16),
-            _buildInfoCard(
-              icon: Icons.assignment_turned_in,
-              title: "Cantidad de proyectos",
-              value: proyecto['proyectos'].toString(),
-              color: Colors.deepPurple,
-            ),
-          ],
-        ),
+      body: ListView(
+        padding: const EdgeInsets.all(16.0),
+        children: [
+          _buildInfoCard(
+            icon: Icons.assignment,
+            title: "Nombre",
+            value: proyecto['nombre'],
+            color: Colors.blueAccent,
+          ),
+          _buildInfoCard(
+            icon: Icons.check_circle,
+            title: "Estado",
+            value: proyecto['status'],
+            color: proyecto['status'] == 'activo'
+                ? Colors.green
+                : Colors.orange,
+          ),
+          _buildInfoCard(
+            icon: Icons.date_range,
+            title: "Fecha de creación",
+            value: proyecto['fechaCreacion'].toString().split('T')[0],
+            color: Colors.indigo,
+          ),
+          _buildInfoCard(
+            icon: Icons.update,
+            title: "Última actividad",
+            value: proyecto['ultimaActividad'].toString().split('T')[0],
+            color: Colors.teal,
+          ),
+          _buildInfoCard(
+            icon: Icons.category,
+            title: "Categoría",
+            value: proyecto['categoria'],
+            color: Colors.purple,
+          ),
+          _buildInfoCard(
+            icon: Icons.location_city,
+            title: "Comuna",
+            value: proyecto['comuna'],
+            color: Colors.deepOrange,
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildInfoCard({required IconData icon, required String title, required String value, required Color color}) {
+  Widget _buildInfoCard(
+      {required IconData icon,
+      required String title,
+      required String value,
+      required Color color}) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      margin: EdgeInsets.symmetric(vertical: 8),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
         child: Row(
@@ -65,7 +86,8 @@ class ProyectoDetalleScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title,
-                      style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+                      style:
+                          TextStyle(fontSize: 14, color: Colors.grey[600])),
                   SizedBox(height: 4),
                   Text(value,
                       style: TextStyle(

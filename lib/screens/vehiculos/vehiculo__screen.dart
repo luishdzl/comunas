@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:http/http.dart' as http;
 import 'vehiculo_detalle_screen.dart';
 
 class VehiculoScreen extends StatefulWidget {
   @override
-   _VehiculoScreenState createState() =>
-   _VehiculoScreenState();
+  _VehiculoScreenState createState() => _VehiculoScreenState();
 }
 
-class _VehiculoScreenState extends State<VehiculoScreen>{
+class _VehiculoScreenState extends State<VehiculoScreen> {
   List vehiculos = [];
   List vehiculosFiltrados = [];
   TextEditingController _searchController = TextEditingController();
@@ -17,7 +16,7 @@ class _VehiculoScreenState extends State<VehiculoScreen>{
   @override
   void initState() {
     super.initState();
-    loadLocalJson();
+    fetchVehiculos();
     _searchController.addListener(_filtrarVehiculos);
   }
 
@@ -27,24 +26,32 @@ class _VehiculoScreenState extends State<VehiculoScreen>{
     super.dispose();
   }
 
-  Future<void> loadLocalJson() async {
-    final String response = await rootBundle.loadString('lib/screens/vehiculos/vehiculos.json');
-    final List data = json.decode(response);
+  Future<void> fetchVehiculos() async {
+    final response = await http.get(Uri.parse(
+        'https://main.d216v5k7f3pzsl.amplifyapp.com/api/vehiculos'));
 
-
-    setState(() {
-      vehiculos = data;
-      vehiculosFiltrados = data;
-    });
+    if (response.statusCode == 200) {
+      final List data = json.decode(response.body);
+      setState(() {
+        vehiculos = data;
+        vehiculosFiltrados = data;
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al cargar los datos')),
+      );
+    }
   }
-    void _filtrarVehiculos() {
+
+  void _filtrarVehiculos() {
     String query = _searchController.text.toLowerCase();
 
-        setState(() {
+    setState(() {
       vehiculosFiltrados = vehiculos.where((vehiculo) {
-        final nombre = vehiculo['nombre'].toString().toLowerCase();
-        final placa = vehiculo['placa'].toString().toLowerCase();
-        return nombre.contains(query) || placa.contains(query);
+        return (vehiculo['placa']?.toString().toLowerCase() ?? '').contains(query) ||
+            (vehiculo['marca']?.toString().toLowerCase() ?? '').contains(query) ||
+            (vehiculo['modelo']?.toString().toLowerCase() ?? '').contains(query) ||
+            (vehiculo['comuna']?.toString().toLowerCase() ?? '').contains(query);
       }).toList();
     });
   }
@@ -60,17 +67,17 @@ class _VehiculoScreenState extends State<VehiculoScreen>{
               children: [
                 SizedBox(height: 16),
                 TextField(
-  controller: _searchController,
-  decoration: InputDecoration(
-    hintText: 'Buscar por nombre o placa...',
-    prefixIcon: Icon(Icons.search),
-    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-  ),
-),
-SizedBox(height: 16),
-
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Buscar por placa, marca, modelo o comuna...',
+                    prefixIcon: Icon(Icons.search),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+                SizedBox(height: 16),
                 Text(
-                  'Lista de vehiculos',
+                  'Lista de vehículos',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 ListView.builder(
@@ -81,19 +88,21 @@ SizedBox(height: 16),
                     final vehiculo = vehiculosFiltrados[index];
                     return Card(
                       elevation: 3,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                       child: ListTile(
-                        title: Text(vehiculo['nombre']),
-                        subtitle: Text(vehiculo['placa']),
+                        title: Text("${vehiculo['marca']} ${vehiculo['modelo']}"),
+                        subtitle: Text("Placa: ${vehiculo['placa']}"),
                         trailing: Icon(Icons.arrow_forward_ios),
-                              onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => VehiculoDetalleScreen(vehiculo: vehiculo),
-          ),
-        );
-      },
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  VehiculoDetalleScreen(vehiculo: vehiculo),
+                            ),
+                          );
+                        },
                       ),
                     );
                   },
@@ -102,6 +111,4 @@ SizedBox(height: 16),
             ),
           );
   }
-
-
 }
