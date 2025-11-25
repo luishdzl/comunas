@@ -173,15 +173,13 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
   }
 
   void _showItemDetails(Map<String, dynamic> item) {
-    setState(() {
-      _selectedItem = item;
-    });
-  }
-
-  void _clearSelection() {
-    setState(() {
-      _selectedItem = null;
-    });
+    showDialog(
+      context: context,
+      barrierColor: Colors.black87,
+      builder: (BuildContext context) {
+        return FullScreenModal(item: item);
+      },
+    );
   }
 
   Widget _buildSearchInput() {
@@ -928,138 +926,6 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
     );
   }
 
-  Widget _buildItemDetails() {
-    if (_selectedItem == null) return const SizedBox();
-
-    final type = _selectedItem!['type'];
-    final title = _selectedItem!['title'];
-    final data = _selectedItem!['data'] as Map<String, dynamic>;
-
-    return Card(
-      elevation: 4,
-      margin: EdgeInsets.symmetric(
-        horizontal: _isSmallScreen ? 4 : 8,
-        vertical: 8,
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(_isSmallScreen ? 12 : 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    'Detalles del ${_getTypeName(type)}',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: _isSmallScreen ? 18 : 20,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(
-                    Icons.close,
-                    size: _isSmallScreen ? 20 : 24,
-                  ),
-                  onPressed: _clearSelection,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-              ],
-            ),
-            SizedBox(height: _isSmallScreen ? 12 : 16),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Colors.blue[800],
-                fontSize: _isSmallScreen ? 16 : 18,
-              ),
-            ),
-            SizedBox(height: _isSmallScreen ? 12 : 16),
-            ..._buildDetailFields(data),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _getTypeName(String type) {
-    switch (type) {
-      case 'vehiculo': return 'Vehículo';
-      case 'proyecto': return 'Proyecto';
-      case 'comuna': return 'Comuna';
-      default: return 'Elemento';
-    }
-  }
-
-  List<Widget> _buildDetailFields(Map<String, dynamic> data) {
-    final fields = <Widget>[];
-    final validEntries = data.entries.where((entry) => 
-        entry.value != null && 
-        entry.key != 'type' && 
-        entry.key != 'title').toList();
-
-    if (validEntries.isEmpty) {
-      return [
-        SizedBox(height: _isSmallScreen ? 12 : 16),
-        Text(
-          'No hay información adicional disponible',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Colors.grey[600],
-            fontSize: _isSmallScreen ? 14 : 16,
-          ),
-          textAlign: TextAlign.center,
-        ),
-      ];
-    }
-
-    for (final entry in validEntries) {
-      fields.addAll([
-        SizedBox(height: _isSmallScreen ? 8 : 12),
-        Container(
-          padding: EdgeInsets.all(_isSmallScreen ? 10 : 12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey[300]!),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: 2,
-                child: Text(
-                  '${_capitalize(entry.key)}:',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: _isSmallScreen ? 14 : 16,
-                  ),
-                ),
-              ),
-              Expanded(
-                flex: 3,
-                child: Text(
-                  entry.value.toString(),
-                  style: TextStyle(fontSize: _isSmallScreen ? 14 : 16),
-                  textAlign: TextAlign.left,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ]);
-    }
-
-    return fields;
-  }
-
-  String _capitalize(String text) {
-    if (text.isEmpty) return text;
-    return text[0].toUpperCase() + text.substring(1);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1079,10 +945,6 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
             children: [
               _buildSearchInput(),
               SizedBox(height: _isSmallScreen ? 16 : 20),
-              if (_selectedItem != null) ...[
-                _buildItemDetails(),
-                SizedBox(height: _isSmallScreen ? 16 : 20),
-              ],
               Expanded(
                 child: _isLoading && !_dataLoaded
                     ? const Center(child: CircularProgressIndicator())
@@ -1093,5 +955,242 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
         ),
       ),
     );
+  }
+}
+
+// Nuevo widget para el modal a pantalla completa
+class FullScreenModal extends StatelessWidget {
+  final Map<String, dynamic> item;
+
+  const FullScreenModal({Key? key, required this.item}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final type = item['type'];
+    final title = item['title'];
+    final data = item['data'] as Map<String, dynamic>;
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: EdgeInsets.zero,
+      child: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(0),
+        ),
+        child: Scaffold(
+          backgroundColor: Colors.white,
+          appBar: AppBar(
+            title: Text(
+              'Detalles del ${_getTypeName(type)}',
+              style: TextStyle(
+                fontSize: isSmallScreen ? 18 : 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            backgroundColor: Colors.blue[700],
+            foregroundColor: Colors.white,
+            elevation: 0,
+            leading: IconButton(
+              icon: Icon(Icons.close, size: isSmallScreen ? 24 : 28),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            actions: [
+
+            ],
+          ),
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header del modal
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          _getTypeIcon(type),
+                          size: isSmallScreen ? 32 : 40,
+                          color: Colors.blue[700],
+                        ),
+                        SizedBox(height: isSmallScreen ? 8 : 12),
+                        Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: isSmallScreen ? 20 : 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue[900],
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          'Tipo: ${_getTypeName(type)}',
+                          style: TextStyle(
+                            fontSize: isSmallScreen ? 14 : 16,
+                            color: Colors.blue[700],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  SizedBox(height: isSmallScreen ? 20 : 24),
+                  
+                  // Detalles
+                  Text(
+                    'Información Detallada',
+                    style: TextStyle(
+                      fontSize: isSmallScreen ? 18 : 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[800],
+                    ),
+                  ),
+                  
+                  SizedBox(height: isSmallScreen ? 12 : 16),
+                  
+                  ..._buildDetailFields(data, isSmallScreen),
+                  
+                  SizedBox(height: isSmallScreen ? 20 : 24),
+                  
+                  // Botones de acción
+                  if (type == 'vehiculo') _buildVehiculoActions(),
+                  if (type == 'proyecto') _buildProyectoActions(),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildDetailFields(Map<String, dynamic> data, bool isSmallScreen) {
+    final fields = <Widget>[];
+    final validEntries = data.entries.where((entry) => 
+        entry.value != null && 
+        entry.key != 'type' && 
+        entry.key != 'title').toList();
+
+    if (validEntries.isEmpty) {
+      return [
+        Container(
+          padding: EdgeInsets.all(isSmallScreen ? 20 : 24),
+          decoration: BoxDecoration(
+            color: Colors.grey[50],
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey[300]!),
+          ),
+          child: Center(
+            child: Text(
+              'No hay información adicional disponible',
+              style: TextStyle(
+                fontSize: isSmallScreen ? 14 : 16,
+                color: Colors.grey[600],
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      ];
+    }
+
+    for (final entry in validEntries) {
+      fields.addAll([
+        Container(
+          padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
+          margin: EdgeInsets.only(bottom: isSmallScreen ? 8 : 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey[300]!),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 4,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 2,
+                child: Text(
+                  '${_capitalize(entry.key)}:',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: isSmallScreen ? 14 : 16,
+                    color: Colors.grey[700],
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 3,
+                child: Text(
+                  entry.value.toString(),
+                  style: TextStyle(
+                    fontSize: isSmallScreen ? 14 : 16,
+                    color: Colors.grey[900],
+                  ),
+                  textAlign: TextAlign.left,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ]);
+    }
+
+    return fields;
+  }
+
+  Widget _buildVehiculoActions() {
+    return Row(
+      children: [
+      ],
+    );
+  }
+
+  Widget _buildProyectoActions() {
+    return Row(
+      children: [
+        SizedBox(width: 12),
+      ],
+    );
+  }
+
+  String _getTypeName(String type) {
+    switch (type) {
+      case 'vehiculo': return 'Vehículo';
+      case 'proyecto': return 'Proyecto';
+      case 'comuna': return 'Comuna';
+      default: return 'Elemento';
+    }
+  }
+
+  IconData _getTypeIcon(String type) {
+    switch (type) {
+      case 'vehiculo': return Icons.directions_car;
+      case 'proyecto': return Icons.work;
+      case 'comuna': return Icons.location_city;
+      default: return Icons.category;
+    }
+  }
+
+  String _capitalize(String text) {
+    if (text.isEmpty) return text;
+    return text[0].toUpperCase() + text.substring(1);
   }
 }
