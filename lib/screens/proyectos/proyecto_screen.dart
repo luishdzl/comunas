@@ -51,13 +51,15 @@ class _ProyectoScreenState extends State<ProyectoScreen> {
 
     setState(() {
       proyectosFiltrados = proyectos.where((proyecto) {
-        return (proyecto['nombre']?.toString().toLowerCase() ?? '')
+        return (proyecto['nombreProyecto']?.toString().toLowerCase() ?? '')
                 .contains(query) ||
-            (proyecto['status']?.toString().toLowerCase() ?? '')
+            (proyecto['estatusProyecto']?.toString().toLowerCase() ?? '')
                 .contains(query) ||
             (proyecto['categoria']?.toString().toLowerCase() ?? '')
                 .contains(query) ||
             (proyecto['comuna']?.toString().toLowerCase() ?? '')
+                .contains(query) ||
+            (proyecto['codigoProyecto']?.toString().toLowerCase() ?? '')
                 .contains(query);
       }).toList();
     });
@@ -65,12 +67,16 @@ class _ProyectoScreenState extends State<ProyectoScreen> {
 
   Color _getStatusColor(String status) {
     switch (status) {
-      case 'activo':
-        return Colors.green;
-      case 'completado':
+      case 'APROBADO':
         return Colors.blue;
-      case 'en pausa':
+      case 'EN EJECUCIÓN':
+        return Colors.green;
+      case 'FINALIZADO':
+        return Colors.purple;
+      case 'PARALIZADO':
         return Colors.orange;
+      case 'INCONCLUSO':
+        return Colors.red;
       default:
         return Colors.grey;
     }
@@ -78,12 +84,16 @@ class _ProyectoScreenState extends State<ProyectoScreen> {
 
   String _getStatusText(String status) {
     switch (status) {
-      case 'activo':
-        return 'Activo';
-      case 'completado':
-        return 'Completado';
-      case 'en pausa':
-        return 'En Pausa';
+      case 'APROBADO':
+        return 'Aprobado';
+      case 'EN EJECUCIÓN':
+        return 'En Ejecución';
+      case 'FINALIZADO':
+        return 'Finalizado';
+      case 'PARALIZADO':
+        return 'Paralizado';
+      case 'INCONCLUSO':
+        return 'Inconcluso';
       default:
         return status;
     }
@@ -122,7 +132,7 @@ class _ProyectoScreenState extends State<ProyectoScreen> {
           TextField(
             controller: _searchController,
             decoration: InputDecoration(
-              hintText: 'Buscar por nombre, categoría, comuna o estado',
+              hintText: 'Buscar por nombre, categoría, comuna, código o estado',
               prefixIcon: Icon(Icons.search),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -150,7 +160,7 @@ class _ProyectoScreenState extends State<ProyectoScreen> {
             itemCount: proyectosFiltrados.length,
             itemBuilder: (context, index) {
               final proyecto = proyectosFiltrados[index];
-              final statusColor = _getStatusColor(proyecto['status']);
+              final statusColor = _getStatusColor(proyecto['estatusProyecto']);
               
               return Card(
                 elevation: 3,
@@ -162,19 +172,21 @@ class _ProyectoScreenState extends State<ProyectoScreen> {
                   leading: CircleAvatar(
                     backgroundColor: statusColor.withOpacity(0.1),
                     child: Icon(
-                      _getStatusIcon(proyecto['status']),
+                      _getStatusIcon(proyecto['estatusProyecto']),
                       color: statusColor,
                       size: 20,
                     ),
                   ),
                   title: Text(
-                    proyecto['nombre'],
+                    proyecto['nombreProyecto'],
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       SizedBox(height: 4),
+                      Text("Código: ${proyecto['codigoProyecto']}"),
+                      SizedBox(height: 2),
                       Text("Comuna: ${proyecto['comuna']}"),
                       SizedBox(height: 2),
                       Row(
@@ -187,7 +199,7 @@ class _ProyectoScreenState extends State<ProyectoScreen> {
                               border: Border.all(color: statusColor),
                             ),
                             child: Text(
-                              _getStatusText(proyecto['status']),
+                              _getStatusText(proyecto['estatusProyecto']),
                               style: TextStyle(
                                 color: statusColor,
                                 fontSize: 12,
@@ -225,12 +237,16 @@ class _ProyectoScreenState extends State<ProyectoScreen> {
 
   IconData _getStatusIcon(String status) {
     switch (status) {
-      case 'activo':
-        return Icons.play_arrow;
-      case 'completado':
+      case 'APROBADO':
         return Icons.check_circle;
-      case 'en pausa':
+      case 'EN EJECUCIÓN':
+        return Icons.play_arrow;
+      case 'FINALIZADO':
+        return Icons.done_all;
+      case 'PARALIZADO':
         return Icons.pause_circle;
+      case 'INCONCLUSO':
+        return Icons.error;
       default:
         return Icons.help;
     }

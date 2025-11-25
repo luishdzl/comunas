@@ -3,8 +3,8 @@ import 'login_screen.dart';
 import 'screens/menu/comunas_screen.dart';
 import 'screens/proyectos/proyecto_screen.dart';
 import 'screens/vehiculos/vehiculo__screen.dart';
-import 'screens/reportes/reportes_screen.dart'; // Nueva importación
-import 'screens/mapas/mapas_screen.dart'; // Nueva importación
+import 'screens/reportes/reportes_screen.dart';
+import 'screens/mapas/mapas_screen.dart';
 
 void main() => runApp(MyApp());
 
@@ -54,16 +54,16 @@ class _HomeScreenState extends State<HomeScreen> {
     ComunasScreen(),
     ProyectoScreen(),
     VehiculoScreen(),
-    ReportesScreen(), // Nueva pantalla
-    MapasScreen(),    // Nueva pantalla
+    ReportesScreen(),
+    MapasScreen(),
   ];
 
   final List<String> _titles = [
     'Ministerio de Comunas',
     'Proyectos',
     'Vehículos',
-    'Reportes y Estadísticas', // Nuevo título
-    'Mapas y Georreferenciación', // Nuevo título
+    'Reportes y Estadísticas',
+    'Mapas y Georreferenciación',
   ];
 
   void _onItemTapped(int index) {

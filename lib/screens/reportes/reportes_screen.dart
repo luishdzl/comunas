@@ -58,14 +58,25 @@ class _ReportesScreenState extends State<ReportesScreen> {
     return _proyectos.fold(0.0, (double sum, proyecto) => sum + ((proyecto['presupuesto'] ?? 0).toDouble()));
   }
 
-  Map<String, int> get _proyectosPorEstado {
-    Map<String, int> counts = {};
-    for (var proyecto in _proyectos) {
-      String estado = proyecto['status']?.toString() ?? 'Sin estado';
-      counts[estado] = (counts[estado] ?? 0) + 1;
-    }
-    return counts;
+Map<String, int> get _proyectosPorEstado {
+  Map<String, int> counts = {};
+  for (var proyecto in _proyectos) {
+    String estado = proyecto['estatusProyecto']?.toString() ?? 'Sin estado';
+    counts[estado] = (counts[estado] ?? 0) + 1;
   }
+  return counts;
+}
+int get _totalPersonasBeneficiadas {
+  return _proyectos.fold(0, (int sum, proyecto) => sum + ((proyecto['personasBeneficiadas'] ?? 0) as int));
+}
+
+int get _totalFamiliasBeneficiadas {
+  return _proyectos.fold(0, (int sum, proyecto) => sum + ((proyecto['familiasBeneficiadas'] ?? 0) as int));
+}
+
+int get _totalComunidadesBeneficiadas {
+  return _proyectos.fold(0, (int sum, proyecto) => sum + ((proyecto['comunidadesBeneficiadas'] ?? 0) as int));
+}
 
   Map<String, int> get _proyectosPorCategoria {
     Map<String, int> counts = {};
@@ -472,21 +483,30 @@ class _ReportesScreenState extends State<ReportesScreen> {
     );
   }
 
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'asignado':
-        return Colors.green;
-      case 'extraviado':
-        return Colors.red;
-      case 'devuelto_a_caracas':
-        return Colors.blue;
-      case 'inactivo':
-        return Colors.orange;
-      default:
-        return Colors.grey;
-    }
+Color _getStatusColor(String status) {
+  switch (status.toLowerCase()) {
+    case 'aprobado':
+      return Colors.blue;
+    case 'en ejecución':
+      return Colors.green;
+    case 'finalizado':
+      return Colors.purple;
+    case 'paralizado':
+      return Colors.orange;
+    case 'inconcluso':
+      return Colors.red;
+    case 'asignado':
+      return Colors.green;
+    case 'extraviado':
+      return Colors.red;
+    case 'devuelto_a_caracas':
+      return Colors.blue;
+    case 'inactivo':
+      return Colors.orange;
+    default:
+      return Colors.grey;
   }
-
+}
   String _getStatusText(String status) {
     switch (status) {
       case 'asignado':

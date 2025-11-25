@@ -16,7 +16,8 @@ class _MapasScreenState extends State<MapasScreen> {
   final TransformationController _transformationController = TransformationController();
   Map<String, Offset> _comunaPositions = {};
   Map<String, List<String>> _comunaConnections = {};
-  bool _showInfoPanel = false; // Nueva variable para controlar la visibilidad del panel
+  bool _showInfoPanel = false;
+  double _currentScale = 1.0;
 
   @override
   void initState() {
@@ -46,7 +47,8 @@ class _MapasScreenState extends State<MapasScreen> {
 
   void _initializeMapPositions() {
     final int count = _comunas.length;
-    final double radius = 120.0;
+    final double baseRadius = 100.0;
+    final double radius = baseRadius * (1 + (count - 10) * 0.05).clamp(1.0, 2.0);
     
     for (int i = 0; i < count; i++) {
       final comuna = _comunas[i];
@@ -113,18 +115,27 @@ class _MapasScreenState extends State<MapasScreen> {
 
   void _resetZoom() {
     _transformationController.value = Matrix4.identity();
+    setState(() {
+      _currentScale = 1.0;
+    });
   }
 
   void _zoomIn() {
     final newValue = _transformationController.value.clone();
     newValue.scale(1.5, 1.5);
     _transformationController.value = newValue;
+    setState(() {
+      _currentScale *= 1.5;
+    });
   }
 
   void _zoomOut() {
     final newValue = _transformationController.value.clone();
     newValue.scale(0.75, 0.75);
     _transformationController.value = newValue;
+    setState(() {
+      _currentScale *= 0.75;
+    });
   }
 
   void _toggleInfoPanel() {
@@ -139,56 +150,90 @@ class _MapasScreenState extends State<MapasScreen> {
       return Center(child: CircularProgressIndicator());
     }
 
-    return Stack(
-      children: [
-        Column(
+    final screenSize = MediaQuery.of(context).size;
+    final isPortrait = screenSize.height > screenSize.width;
+    final mapSize = isPortrait ? screenSize.width * 0.9 : screenSize.height * 0.8;
+    final mapCenter = mapSize / 2;
+
+    return Scaffold(
+      body: SafeArea(
+        child: Stack(
           children: [
-            _buildFilterBar(),
-            Expanded(
-              child: _buildInteractiveMap(),
+            Column(
+              children: [
+                _buildFilterBar(context),
+                Expanded(
+                  child: Center(
+                    child: _buildInteractiveMap(mapSize, mapCenter),
+                  ),
+                ),
+              ],
+            ),
+            
+            if (_showInfoPanel)
+              Positioned(
+                bottom: 70,
+                left: 16,
+                right: 16,
+                child: _buildInfoPanel(context),
+              ),
+            
+            Positioned(
+              bottom: 16,
+              right: 16,
+              child: Column(
+                children: [
+                  _buildToggleButton(),
+                  SizedBox(height: 8),
+                  _buildMobileZoomControls(),
+                ],
+              ),
             ),
           ],
         ),
-        
-        // Panel de información (condicional)
-        if (_showInfoPanel)
-          Positioned(
-            bottom: 16,
-            left: 16,
-            right: 16,
-            child: _buildInfoPanel(),
-          ),
-        
-        // Botón flotante para mostrar/ocultar el panel
-        Positioned(
-          bottom: 16,
-          right: 16,
-          child: _buildToggleButton(),
-        ),
-      ],
+      ),
     );
   }
 
-  Widget _buildFilterBar() {
+  Widget _buildFilterBar(BuildContext context) {
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
+    
     return Card(
-      margin: EdgeInsets.all(16),
+      margin: EdgeInsets.all(isSmallScreen ? 8 : 16),
       elevation: 2,
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: EdgeInsets.symmetric(
+          horizontal: isSmallScreen ? 12 : 16,
+          vertical: isSmallScreen ? 8 : 12,
+        ),
         child: Row(
           children: [
-            Icon(Icons.filter_list, color: Colors.blue, size: 20),
-            SizedBox(width: 8),
-            Text('Filtrar:', style: TextStyle(fontWeight: FontWeight.bold)),
-            SizedBox(width: 16),
+            Icon(Icons.filter_list, color: Colors.blue, size: isSmallScreen ? 18 : 20),
+            SizedBox(width: isSmallScreen ? 6 : 8),
+            Text('Filtrar:', 
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: isSmallScreen ? 14 : 16
+                )),
+            SizedBox(width: isSmallScreen ? 12 : 16),
             Expanded(
               child: DropdownButton<String>(
                 value: _selectedFilter,
                 isExpanded: true,
                 underline: SizedBox(),
                 items: [
-                  DropdownMenuItem(value: 'todas', child: Text('Todas las Comunas')),
-                  DropdownMenuItem(value: 'grandes', child: Text('Comunas Grandes (>8000 hab.)')),
+                  DropdownMenuItem(
+                    value: 'todas', 
+                    child: Text(
+                      'Todas las Comunas',
+                      style: TextStyle(fontSize: isSmallScreen ? 12 : 14),
+                    )),
+                  DropdownMenuItem(
+                    value: 'grandes', 
+                    child: Text(
+                      'Comunas Grandes (>8000 hab.)',
+                      style: TextStyle(fontSize: isSmallScreen ? 12 : 14),
+                    )),
                 ],
                 onChanged: (value) {
                   setState(() {
@@ -197,8 +242,10 @@ class _MapasScreenState extends State<MapasScreen> {
                 },
               ),
             ),
-            SizedBox(width: 16),
-            _buildZoomControls(),
+            if (!_isSmallScreen(context)) ...[
+              SizedBox(width: 16),
+              _buildZoomControls(),
+            ],
           ],
         ),
       ),
@@ -227,6 +274,31 @@ class _MapasScreenState extends State<MapasScreen> {
     );
   }
 
+  Widget _buildMobileZoomControls() {
+    return Card(
+      elevation: 4,
+      child: Column(
+        children: [
+          IconButton(
+            icon: Icon(Icons.zoom_in, size: 20),
+            onPressed: _zoomIn,
+            tooltip: 'Acercar',
+          ),
+          IconButton(
+            icon: Icon(Icons.refresh, size: 20),
+            onPressed: _resetZoom,
+            tooltip: 'Restablecer zoom',
+          ),
+          IconButton(
+            icon: Icon(Icons.zoom_out, size: 20),
+            onPressed: _zoomOut,
+            tooltip: 'Alejar',
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildToggleButton() {
     return FloatingActionButton(
       onPressed: _toggleInfoPanel,
@@ -241,79 +313,114 @@ class _MapasScreenState extends State<MapasScreen> {
     );
   }
 
-  Widget _buildInteractiveMap() {
+  Widget _buildInteractiveMap(double mapSize, double mapCenter) {
     return InteractiveViewer(
       transformationController: _transformationController,
-      boundaryMargin: EdgeInsets.all(100),
+      boundaryMargin: EdgeInsets.all(20),
       minScale: 0.1,
       maxScale: 4.0,
+      onInteractionUpdate: (ScaleUpdateDetails details) {
+        if (details.scale != 1.0) {
+          setState(() {
+            _currentScale *= details.scale;
+          });
+        }
+      },
       child: Container(
-        width: 800,
-        height: 800,
-        color: Colors.blue[50],
-        child: CustomPaint(
-          size: Size(800, 800),
-          painter: _MapPainter(
-            comunas: _comunasFiltradas,
-            comunaPositions: _comunaPositions,
-            comunaConnections: _comunaConnections,
-            onComunaTap: _showComunaDetails,
-            proyectos: _proyectos,
-          ),
+        width: mapSize,
+        height: mapSize,
+        decoration: BoxDecoration(
+          color: Colors.blue[50],
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 8,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Stack(
+          children: [
+            CustomPaint(
+              size: Size(mapSize, mapSize),
+              painter: _MapConnectionsPainter(
+                comunas: _comunasFiltradas,
+                comunaPositions: _comunaPositions,
+                comunaConnections: _comunaConnections,
+                mapCenter: mapCenter,
+              ),
+            ),
+            
+            for (var comuna in _comunasFiltradas)
+              if (_comunaPositions[comuna['nombre']] != null)
+                _ComunaMarker(
+                  comuna: comuna,
+                  proyectos: _proyectos,
+                  position: _comunaPositions[comuna['nombre']]!,
+                  onTap: () => _showComunaDetails(comuna, context),
+                  scale: _currentScale,
+                  mapCenter: mapCenter,
+                  mapSize: mapSize,
+                ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildInfoPanel() {
+  Widget _buildInfoPanel(BuildContext context) {
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
+    
     return Card(
       elevation: 8,
       child: Padding(
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.info, color: Colors.blue),
+                Icon(Icons.info, color: Colors.blue, size: isSmallScreen ? 18 : 20),
                 SizedBox(width: 8),
-                Text(
-                  'Mapa de Relaciones entre Comunas',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                Expanded(
+                  child: Text(
+                    'Mapa de Relaciones',
+                    style: TextStyle(
+                      fontSize: isSmallScreen ? 14 : 16, 
+                      fontWeight: FontWeight.bold
+                    ),
+                  ),
                 ),
-                Spacer(),
                 IconButton(
-                  icon: Icon(Icons.close, size: 18),
+                  icon: Icon(Icons.close, size: isSmallScreen ? 16 : 18),
                   onPressed: _toggleInfoPanel,
                   tooltip: 'Cerrar panel',
                 ),
               ],
             ),
-            SizedBox(height: 12),
-            _buildInfoItem('Comunas mostradas:', '${_comunasFiltradas.length} de ${_comunas.length}'),
-            _buildInfoItem('Proyectos activos:', '${_getProyectosActivosCount().toString()}'),
-            _buildInfoItem('Población total:', '${_getPoblacionTotal().toString()} habitantes'),
+            SizedBox(height: 8),
+            _buildInfoItem('Comunas:', '${_comunasFiltradas.length}/${_comunas.length}', context),
+            _buildInfoItem('Proyectos activos:', _getProyectosActivosCount().toString(), context),
+            _buildInfoItem('Población total:', '${_getPoblacionTotal()} hab.', context),
             SizedBox(height: 8),
             Text(
               'Leyenda:',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+              style: TextStyle(
+                fontWeight: FontWeight.bold, 
+                fontSize: isSmallScreen ? 12 : 14
+              ),
             ),
             SizedBox(height: 4),
-            Row(
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
               children: [
-                _buildLegendItem(Colors.green, '0-1 proyectos'),
-                SizedBox(width: 8),
-                _buildLegendItem(Colors.orange, '2-3 proyectos'),
-                SizedBox(width: 8),
-                _buildLegendItem(Colors.red, '4+ proyectos'),
-                SizedBox(width: 8),
-                _buildLegendItem(Colors.blue, 'Conexión'),
+                _buildLegendItem(Colors.green, '0-1', context),
+                _buildLegendItem(Colors.orange, '2-3', context),
+                _buildLegendItem(Colors.red, '4+', context),
+                _buildLegendItem(Colors.blue, 'Conexión', context),
               ],
-            ),
-            SizedBox(height: 4),
-            Text(
-              'Las líneas azules muestran relaciones de linderos entre comunas',
-              style: TextStyle(fontSize: 10, color: Colors.grey[600]),
             ),
           ],
         ),
@@ -321,32 +428,50 @@ class _MapasScreenState extends State<MapasScreen> {
     );
   }
 
-  Widget _buildInfoItem(String label, String value) {
+  Widget _buildInfoItem(String label, String value, BuildContext context) {
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
+    
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 4),
+      padding: EdgeInsets.symmetric(vertical: 2),
       child: Row(
         children: [
-          Expanded(child: Text(label, style: TextStyle(fontSize: 14))),
-          Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+          Expanded(
+            child: Text(
+              label, 
+              style: TextStyle(fontSize: isSmallScreen ? 12 : 14)
+            ),
+          ),
+          Text(
+            value, 
+            style: TextStyle(
+              fontSize: isSmallScreen ? 12 : 14, 
+              fontWeight: FontWeight.bold
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildLegendItem(Color color, String text) {
+  Widget _buildLegendItem(Color color, String text, BuildContext context) {
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
+    
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 12,
-          height: 12,
+          width: isSmallScreen ? 10 : 12,
+          height: isSmallScreen ? 10 : 12,
           decoration: BoxDecoration(
             color: color,
             shape: BoxShape.circle,
           ),
         ),
         SizedBox(width: 4),
-        Text(text, style: TextStyle(fontSize: 10)),
+        Text(
+          text, 
+          style: TextStyle(fontSize: isSmallScreen ? 10 : 12)
+        ),
       ],
     );
   }
@@ -359,23 +484,30 @@ class _MapasScreenState extends State<MapasScreen> {
   }
 
   int _getProyectosActivosCount() {
-    return _proyectos.where((p) => p['status'] == 'activo').length;
+    return _proyectos.where((p) => p['estatusProyecto'] == 'EN EJECUCIÓN').length;
   }
 
   int _getPoblacionTotal() {
     return _comunasFiltradas.fold(0, (int sum, comuna) => sum + ((comuna['poblacionVotante'] ?? 0) as int));
   }
 
-  void _showComunaDetails(Map comuna) {
+  void _showComunaDetails(Map comuna, BuildContext context) {
     final proyectosComuna = _proyectos.where((p) => p['comuna'] == comuna['nombre']).toList();
-    final connections = _comunaConnections[comuna['nombre']] ?? [];
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) {
         return Container(
           padding: EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -402,57 +534,39 @@ class _MapasScreenState extends State<MapasScreen> {
               ),
               SizedBox(height: 16),
               
-              _buildDetailItem('Código:', comuna['codigo'] ?? 'No disponible'),
-              _buildDetailItem('RIF:', comuna['rif'] ?? 'No disponible'),
-              _buildDetailItem('Dirección:', comuna['direccion'] ?? 'No disponible'),
-              _buildDetailItem('Población votante:', '${comuna['poblacionVotante'] ?? 0} habitantes'),
-              _buildDetailItem('Consejos comunales:', '${comuna['cantidadConsejosComunales'] ?? 0}'),
-              _buildDetailItem('Proyectos en la comuna:', '${proyectosComuna.length}'),
-              
-              SizedBox(height: 16),
-              Text('Linderos:', style: TextStyle(fontWeight: FontWeight.bold)),
-              SizedBox(height: 8),
-              _buildLinderoItem('Norte', comuna['linderoNorte']),
-              _buildLinderoItem('Sur', comuna['linderoSur']),
-              _buildLinderoItem('Este', comuna['linderoEste']),
-              _buildLinderoItem('Oeste', comuna['linderoOeste']),
-              
-              if (connections.isNotEmpty) ...[
-                SizedBox(height: 16),
-                Text('Comunas Relacionadas:', style: TextStyle(fontWeight: FontWeight.bold)),
-                SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
-                  children: connections.map((nombre) => Chip(
-                    label: Text(nombre, style: TextStyle(fontSize: 12)),
-                    backgroundColor: Colors.blue.withOpacity(0.1),
-                  )).toList(),
-                ),
-              ],
+              _buildResponsiveDetailItem('Código:', comuna['codigo']?.toString() ?? 'No disponible', context),
+              _buildResponsiveDetailItem('RIF:', comuna['rif']?.toString() ?? 'No disponible', context),
+              _buildResponsiveDetailItem('Dirección:', comuna['direccion']?.toString() ?? 'No disponible', context),
+              _buildResponsiveDetailItem('Población votante:', '${comuna['poblacionVotante'] ?? 0} habitantes', context),
+              _buildResponsiveDetailItem('Consejos comunales:', '${comuna['cantidadConsejosComunales'] ?? 0}', context),
+              _buildResponsiveDetailItem('Proyectos en la comuna:', '${proyectosComuna.length}', context),
               
               if (proyectosComuna.isNotEmpty) ...[
                 SizedBox(height: 16),
                 Text('Proyectos:', style: TextStyle(fontWeight: FontWeight.bold)),
                 SizedBox(height: 8),
-                ...proyectosComuna.take(3).map((proyecto) => 
-                  Padding(
-                    padding: EdgeInsets.symmetric(vertical: 4),
-                    child: Row(
-                      children: [
-                        Icon(Icons.arrow_right, size: 16, color: Colors.blue),
-                        SizedBox(width: 8),
-                        Expanded(child: Text('${proyecto['nombre']}')),
-                        Chip(
-                          label: Text(proyecto['status'] ?? '', style: TextStyle(fontSize: 10)),
-                          backgroundColor: _getStatusColor(proyecto['status']).withOpacity(0.1),
-                        ),
-                      ],
+                ...proyectosComuna.take(3).map((proyecto) {
+                  final nombreProyecto = proyecto['nombreProyecto']?.toString() ?? 'Sin nombre';
+                  final estatusProyecto = proyecto['estatusProyecto']?.toString() ?? 'Sin estado';
+                  
+                  return ListTile(
+                    leading: Icon(Icons.arrow_right, color: Colors.blue),
+                    title: Text(
+                      nombreProyecto,
+                      style: TextStyle(fontSize: 14),
                     ),
-                  )
-                ).toList(),
+                    trailing: Chip(
+                      label: Text(
+                        _getStatusText(estatusProyecto), 
+                        style: TextStyle(fontSize: 10)
+                      ),
+                      backgroundColor: _getStatusColor(estatusProyecto).withOpacity(0.1),
+                    ),
+                    contentPadding: EdgeInsets.zero,
+                  );
+                }).toList(),
               ],
-              SizedBox(height: 20),
+              SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 20),
             ],
           ),
         );
@@ -460,78 +574,102 @@ class _MapasScreenState extends State<MapasScreen> {
     );
   }
 
-  Widget _buildDetailItem(String label, String value) {
+  Widget _buildResponsiveDetailItem(String label, String value, BuildContext context) {
+    final isSmallScreen = MediaQuery.of(context).size.width < 600;
+    
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 4),
+      padding: EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Expanded(child: Text(label, style: TextStyle(fontSize: 14))),
-          Text(value, 
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.end),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLinderoItem(String direccion, String? valor) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        children: [
-          Container(
-            width: 60,
-            child: Text('$direccion:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-          ),
-          SizedBox(width: 8),
           Expanded(
-            child: Text(valor ?? 'No disponible', 
-                style: TextStyle(fontSize: 12),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis),
+            flex: isSmallScreen ? 2 : 1,
+            child: Text(
+              label, 
+              style: TextStyle(
+                fontSize: isSmallScreen ? 14 : 14,
+                fontWeight: FontWeight.w500
+              ),
+            ),
+          ),
+          Expanded(
+            flex: isSmallScreen ? 3 : 2,
+            child: Text(
+              value, 
+              style: TextStyle(
+                fontSize: isSmallScreen ? 14 : 14,
+                fontWeight: FontWeight.bold
+              ),
+              textAlign: TextAlign.end,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Color _getStatusColor(String? status) {
-    switch (status?.toLowerCase()) {
-      case 'activo':
-        return Colors.green;
-      case 'completado':
+  Color _getStatusColor(String status) {
+    if (status == null) return Colors.grey;
+    
+    switch (status.toUpperCase()) {
+      case 'APROBADO':
         return Colors.blue;
-      case 'en pausa':
+      case 'EN EJECUCIÓN':
+        return Colors.green;
+      case 'FINALIZADO':
+        return Colors.purple;
+      case 'PARALIZADO':
         return Colors.orange;
+      case 'INCONCLUSO':
+        return Colors.red;
       default:
         return Colors.grey;
     }
   }
+
+  String _getStatusText(String status) {
+    if (status == null) return 'Sin estado';
+    
+    switch (status.toUpperCase()) {
+      case 'APROBADO':
+        return 'Aprobado';
+      case 'EN EJECUCIÓN':
+        return 'En Ejecución';
+      case 'FINALIZADO':
+        return 'Finalizado';
+      case 'PARALIZADO':
+        return 'Paralizado';
+      case 'INCONCLUSO':
+        return 'Inconcluso';
+      default:
+        return status;
+    }
+  }
+
+  bool _isSmallScreen(BuildContext context) {
+    return MediaQuery.of(context).size.width < 600;
+  }
 }
 
-// La clase _MapPainter se mantiene igual que antes
-class _MapPainter extends CustomPainter {
+class _MapConnectionsPainter extends CustomPainter {
   final List comunas;
   final Map<String, Offset> comunaPositions;
   final Map<String, List<String>> comunaConnections;
-  final Function(Map) onComunaTap;
-  final List proyectos;
+  final double mapCenter;
 
-  _MapPainter({
+  _MapConnectionsPainter({
     required this.comunas,
     required this.comunaPositions,
     required this.comunaConnections,
-    required this.onComunaTap,
-    required this.proyectos,
+    required this.mapCenter,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
+    final center = Offset(mapCenter, mapCenter);
     
     final connectionPaint = Paint()
       ..color = Colors.blue.withOpacity(0.3)
-      ..strokeWidth = 2
+      ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke;
 
     for (var comuna in comunas) {
@@ -553,71 +691,32 @@ class _MapPainter extends CustomPainter {
         }
       }
     }
-
-    for (var comuna in comunas) {
-      final String nombre = comuna['nombre'];
-      final Offset? position = comunaPositions[nombre];
-      
-      if (position != null) {
-        final proyectosComuna = proyectos.where((p) => p['comuna'] == nombre).toList();
-        final markerColor = _getMarkerColor(proyectosComuna.length);
-        
-        final circlePaint = Paint()
-          ..color = markerColor
-          ..style = PaintingStyle.fill;
-        
-        final borderPaint = Paint()
-          ..color = Colors.white
-          ..strokeWidth = 2
-          ..style = PaintingStyle.stroke;
-        
-        canvas.drawCircle(center + position, 20, circlePaint);
-        canvas.drawCircle(center + position, 20, borderPaint);
-        
-        final textPainter = TextPainter(
-          text: TextSpan(
-            text: proyectosComuna.length.toString(),
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          textDirection: TextDirection.ltr,
-        );
-        textPainter.layout();
-        textPainter.paint(
-          canvas,
-          center + position - Offset(textPainter.width / 2, textPainter.height / 2),
-        );
-        
-        final namePainter = TextPainter(
-          text: TextSpan(
-            text: _getShortName(nombre),
-            style: TextStyle(
-              color: Colors.black87,
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          textDirection: TextDirection.ltr,
-        );
-        namePainter.layout();
-        namePainter.paint(
-          canvas,
-          center + position + Offset(-namePainter.width / 2, 25),
-        );
-      }
-    }
   }
 
-  String _getShortName(String fullName) {
-    final parts = fullName.split(' ');
-    if (parts.length > 2) {
-      return '${parts[1]} ${parts[2]}';
-    }
-    return fullName.length > 12 ? '${fullName.substring(0, 10)}...' : fullName;
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return true;
   }
+}
+
+class _ComunaMarker extends StatelessWidget {
+  final Map comuna;
+  final List proyectos;
+  final Offset position;
+  final VoidCallback onTap;
+  final double scale;
+  final double mapCenter;
+  final double mapSize;
+
+  const _ComunaMarker({
+    required this.comuna,
+    required this.proyectos,
+    required this.position,
+    required this.onTap,
+    required this.scale,
+    required this.mapCenter,
+    required this.mapSize,
+  });
 
   Color _getMarkerColor(int proyectosCount) {
     if (proyectosCount == 0) return Colors.grey;
@@ -626,29 +725,104 @@ class _MapPainter extends CustomPainter {
     return Colors.red;
   }
 
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return true;
+  String _getShortName(String fullName) {
+    if (fullName == null) return '';
+    
+    final parts = fullName.split(' ');
+    if (parts.length > 2) {
+      return '${parts[0]} ${parts[1]}';
+    }
+    return fullName.length > 12 ? '${fullName.substring(0, 10)}...' : fullName;
   }
 
   @override
-  bool hitTest(Offset position) {
-    final center = Offset(400, 400);
+  Widget build(BuildContext context) {
+    final proyectosComuna = proyectos.where((p) => p['comuna'] == comuna['nombre']).toList();
+    final markerColor = _getMarkerColor(proyectosComuna.length);
     
-    for (var comuna in comunas) {
-      final String nombre = comuna['nombre'];
-      final Offset? comunaPosition = comunaPositions[nombre];
-      
-      if (comunaPosition != null) {
-        final circleCenter = center + comunaPosition;
-        final distance = (position - circleCenter).distance;
-        
-        if (distance <= 20) {
-          onComunaTap(comuna);
-          return true;
-        }
-      }
-    }
-    return false;
+    final double baseMarkerSize = mapSize * 0.08;
+    final double adaptiveMarkerSize = baseMarkerSize / scale.clamp(0.5, 2.0);
+    
+    final double leftPosition = mapCenter + position.dx - adaptiveMarkerSize / 2;
+    final double topPosition = mapCenter + position.dy - adaptiveMarkerSize / 2;
+
+    return Positioned(
+      left: leftPosition,
+      top: topPosition,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: adaptiveMarkerSize,
+          height: adaptiveMarkerSize,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: adaptiveMarkerSize,
+                height: adaptiveMarkerSize,
+                decoration: BoxDecoration(
+                  color: markerColor,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white,
+                    width: max(1.5, 1.5 / scale.clamp(0.5, 2.0)),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 3,
+                      offset: Offset(0, 1),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: Text(
+                    proyectosComuna.length.toString(),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: adaptiveMarkerSize * 0.3,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              
+              Positioned(
+                left: adaptiveMarkerSize / 2 - 25,
+                top: adaptiveMarkerSize + 2,
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxWidth: 50,
+                  ),
+                  padding: EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.95),
+                    borderRadius: BorderRadius.circular(3),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 1,
+                        offset: Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    _getShortName(comuna['nombre'] ?? ''),
+                    style: TextStyle(
+                      color: Colors.black87,
+                      fontSize: adaptiveMarkerSize * 0.15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

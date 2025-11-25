@@ -7,38 +7,35 @@ class ProyectoDetalleScreen extends StatelessWidget {
 
   Color _getStatusColor(String status) {
     switch (status) {
-      case 'activo':
-        return Colors.green;
-      case 'completado':
+      case 'APROBADO':
         return Colors.blue;
-      case 'en pausa':
+      case 'EN EJECUCIÓN':
+        return Colors.green;
+      case 'FINALIZADO':
+        return Colors.purple;
+      case 'PARALIZADO':
         return Colors.orange;
+      case 'INCONCLUSO':
+        return Colors.red;
       default:
         return Colors.grey;
     }
   }
 
-  String _formatCurrency(double amount) {
-    return '\$${amount.toStringAsFixed(2).replaceAllMapped(
-          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (Match m) => '${m[1]},',
-        )}';
-  }
-
   @override
   Widget build(BuildContext context) {
-    final statusColor = _getStatusColor(proyecto['status']);
+    final statusColor = _getStatusColor(proyecto['estatusProyecto']);
     
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: Text(proyecto['nombre']),
+        title: Text(proyecto['nombreProyecto']),
         elevation: 0,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          // Tarjeta de estado con progreso
+          // Tarjeta de estado
           Card(
             elevation: 4,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -56,7 +53,7 @@ class ProyectoDetalleScreen extends StatelessWidget {
                           border: Border.all(color: statusColor),
                         ),
                         child: Text(
-                          proyecto['status'].toString().toUpperCase(),
+                          _getStatusText(proyecto['estatusProyecto']),
                           style: TextStyle(
                             color: statusColor,
                             fontWeight: FontWeight.bold,
@@ -65,9 +62,40 @@ class ProyectoDetalleScreen extends StatelessWidget {
                         ),
                       ),
                       Spacer(),
+                      Text(
+                        proyecto['codigoProyecto'],
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                   ),
                   SizedBox(height: 12),
+                  Row(
+                    children: [
+                      _buildMiniStat(
+                        'Familias',
+                        proyecto['familiasBeneficiadas'].toString(),
+                        Icons.family_restroom,
+                        Colors.blue,
+                      ),
+                      SizedBox(width: 16),
+                      _buildMiniStat(
+                        'Personas',
+                        proyecto['personasBeneficiadas'].toString(),
+                        Icons.people,
+                        Colors.green,
+                      ),
+                      SizedBox(width: 16),
+                      _buildMiniStat(
+                        'Comunidades',
+                        proyecto['comunidadesBeneficiadas'].toString(),
+                        Icons.location_city,
+                        Colors.orange,
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -77,13 +105,13 @@ class ProyectoDetalleScreen extends StatelessWidget {
           _buildInfoCard(
             icon: Icons.assignment,
             title: "Nombre del Proyecto",
-            value: proyecto['nombre'],
+            value: proyecto['nombreProyecto'],
             color: Colors.blueAccent,
           ),
           _buildInfoCard(
             icon: Icons.description,
-            title: "Descripción",
-            value: proyecto['descripcion'] ?? 'Sin descripción',
+            title: "Observaciones",
+            value: proyecto['observacion'] ?? 'Sin observaciones',
             color: Colors.purple,
           ),
           _buildInfoCard(
@@ -99,28 +127,54 @@ class ProyectoDetalleScreen extends StatelessWidget {
             color: Colors.deepOrange,
           ),
           _buildInfoCard(
-            icon: Icons.attach_money,
-            title: "Presupuesto",
-            value: _formatCurrency((proyecto['presupuesto'] ?? 0).toDouble()),
-            color: Colors.green,
+            icon: Icons.assignment_ind,
+            title: "Consejo Comunal",
+            value: proyecto['consejoComunalId'] ?? 'No especificado',
+            color: Colors.teal,
           ),
           _buildInfoCard(
-            icon: Icons.people,
-            title: "Beneficiarios",
-            value: '${proyecto['beneficiarios']} personas',
-            color: Colors.teal,
+            icon: Icons.featured_play_list,
+            title: "Consulta ID",
+            value: proyecto['consultaId'] ?? 'No especificado',
+            color: Colors.indigo,
           ),
           _buildInfoCard(
             icon: Icons.date_range,
             title: "Fecha de creación",
             value: proyecto['fechaCreacion'].toString().split('T')[0],
-            color: Colors.indigo,
+            color: Colors.cyan,
           ),
           _buildInfoCard(
             icon: Icons.update,
             title: "Última actividad",
             value: proyecto['ultimaActividad'].toString().split('T')[0],
-            color: Colors.cyan,
+            color: Colors.amber,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMiniStat(String label, String value, IconData icon, Color color) {
+    return Expanded(
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 20),
+          SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              color: Colors.grey[600],
+            ),
           ),
         ],
       ),
@@ -170,5 +224,22 @@ class ProyectoDetalleScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _getStatusText(String status) {
+    switch (status) {
+      case 'APROBADO':
+        return 'APROBADO';
+      case 'EN EJECUCIÓN':
+        return 'EN EJECUCIÓN';
+      case 'FINALIZADO':
+        return 'FINALIZADO';
+      case 'PARALIZADO':
+        return 'PARALIZADO';
+      case 'INCONCLUSO':
+        return 'INCONCLUSO';
+      default:
+        return status;
+    }
   }
 }
