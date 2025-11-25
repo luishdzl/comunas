@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:flutter/services.dart' show rootBundle;
 import 'proyecto_detalle_screen.dart';
 
 class ProyectoScreen extends StatefulWidget {
@@ -12,11 +12,13 @@ class _ProyectoScreenState extends State<ProyectoScreen> {
   List proyectos = [];
   List proyectosFiltrados = [];
   TextEditingController _searchController = TextEditingController();
+  bool isLoading = true;
+  String errorMessage = '';
 
   @override
   void initState() {
     super.initState();
-    fetchProyectos();
+    loadProyectosFromJson();
     _searchController.addListener(_filtrarProyectos);
   }
 
@@ -26,20 +28,21 @@ class _ProyectoScreenState extends State<ProyectoScreen> {
     super.dispose();
   }
 
-  Future<void> fetchProyectos() async {
-    final response = await http.get(
-      Uri.parse('https://main.d216v5k7f3pzsl.amplifyapp.com/api/proyectos'),
-    );
+  Future<void> loadProyectosFromJson() async {
+    try {
+      final String data = await rootBundle.loadString('lib/assets/proyectos.json');
+      final List jsonResult = json.decode(data);
 
-    if (response.statusCode == 200) {
-      final List data = json.decode(response.body);
       setState(() {
-        proyectos = data;
-        proyectosFiltrados = data;
+        proyectos = jsonResult;
+        proyectosFiltrados = jsonResult;
+        isLoading = false;
       });
-    } else {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Error al cargar los datos')));
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Error al cargar los proyectos: $e';
+        isLoading = false;
+      });
     }
   }
 
@@ -60,62 +63,176 @@ class _ProyectoScreenState extends State<ProyectoScreen> {
     });
   }
 
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'activo':
+        return Colors.green;
+      case 'completado':
+        return Colors.blue;
+      case 'en pausa':
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _getStatusText(String status) {
+    switch (status) {
+      case 'activo':
+        return 'Activo';
+      case 'completado':
+        return 'Completado';
+      case 'en pausa':
+        return 'En Pausa';
+      default:
+        return status;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return proyectos.isEmpty
-        ? Center(child: CircularProgressIndicator())
-        : SingleChildScrollView(
-            padding: EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(height: 16),
-                TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: 'Buscar por nombre, categoría o comuna',
-                    prefixIcon: Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+    if (isLoading) {
+      return Center(child: CircularProgressIndicator());
+    }
+
+    if (errorMessage.isNotEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error, size: 64, color: Colors.red),
+            SizedBox(height: 16),
+            Text(errorMessage, textAlign: TextAlign.center),
+            SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: loadProyectosFromJson,
+              child: Text('Reintentar'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(height: 16),
+          TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: 'Buscar por nombre, categoría, comuna o estado',
+              prefixIcon: Icon(Icons.search),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Lista de Proyectos (${proyectosFiltrados.length})',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              Chip(
+                label: Text('Total: ${proyectos.length}'),
+                backgroundColor: Colors.blue.shade100,
+              ),
+            ],
+          ),
+          SizedBox(height: 8),
+          ListView.builder(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            itemCount: proyectosFiltrados.length,
+            itemBuilder: (context, index) {
+              final proyecto = proyectosFiltrados[index];
+              final statusColor = _getStatusColor(proyecto['status']);
+              
+              return Card(
+                elevation: 3,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                margin: EdgeInsets.symmetric(vertical: 4),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: statusColor.withOpacity(0.1),
+                    child: Icon(
+                      _getStatusIcon(proyecto['status']),
+                      color: statusColor,
+                      size: 20,
                     ),
                   ),
-                ),
-                SizedBox(height: 16),
-                Text(
-                  'Lista de proyectos',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  itemCount: proyectosFiltrados.length,
-                  itemBuilder: (context, index) {
-                    final proyecto = proyectosFiltrados[index];
-                    return Card(
-                      elevation: 3,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: ListTile(
-                        title: Text("Nombre: ${proyecto['nombre']}"),
-                        subtitle: Text(
-                            "Comuna: ${proyecto['comuna']} — Estado: ${proyecto['status']}"),
-                        trailing: Icon(Icons.arrow_forward_ios),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ProyectoDetalleScreen(
-                                  proyecto: proyecto),
+                  title: Text(
+                    proyecto['nombre'],
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: 4),
+                      Text("Comuna: ${proyecto['comuna']}"),
+                      SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: statusColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: statusColor),
                             ),
-                          );
-                        },
+                            child: Text(
+                              _getStatusText(proyecto['status']),
+                              style: TextStyle(
+                                color: statusColor,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            "• ${proyecto['categoria']}",
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  trailing: Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ProyectoDetalleScreen(
+                            proyecto: proyecto),
                       ),
                     );
                   },
                 ),
-              ],
-            ),
-          );
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  IconData _getStatusIcon(String status) {
+    switch (status) {
+      case 'activo':
+        return Icons.play_arrow;
+      case 'completado':
+        return Icons.check_circle;
+      case 'en pausa':
+        return Icons.pause_circle;
+      default:
+        return Icons.help;
+    }
   }
 }

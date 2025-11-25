@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:flutter/services.dart' show rootBundle;
 import 'comuna_detalle_screen.dart';
 
 class ComunasScreen extends StatefulWidget {
@@ -12,80 +12,137 @@ class _ComunasScreenState extends State<ComunasScreen> {
   List comunas = [];
   int totalConsejos = 0;
   int totalVotantes = 0;
+  bool isLoading = true;
+  String errorMessage = '';
 
   @override
   void initState() {
     super.initState();
-    fetchComunas();
+    loadComunasFromJson();
   }
 
-Future<void> fetchComunas() async {
-  final response = await http.get(Uri.parse(
-      'https://main.d216v5k7f3pzsl.amplifyapp.com/api/comunas'));
+  Future<void> loadComunasFromJson() async {
+    try {
+      final String data = await rootBundle.loadString('lib/assets/comunas.json');
+      final List jsonResult = json.decode(data);
 
-  if (response.statusCode == 200) {
-    final List data = json.decode(response.body);
+      int consejos = jsonResult.fold(
+          0, (sum, item) => sum + ((item['cantidadConsejosComunales'] ?? 0) as int));
+      int votantes = jsonResult.fold(
+          0, (sum, item) => sum + ((item['poblacionVotante'] ?? 0) as int));
 
-    int consejos = data.fold(
-        0, (sum, item) => sum + ((item['cantidadConsejosComunales'] ?? 0) as int));
-    int votantes = data.fold(
-        0, (sum, item) => sum + ((item['poblacionVotante'] ?? 0) as int));
-
-    setState(() {
-      comunas = data;
-      totalConsejos = consejos;
-      totalVotantes = votantes;
-    });
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al cargar las comunas')));
+      setState(() {
+        comunas = jsonResult;
+        totalConsejos = consejos;
+        totalVotantes = votantes;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Error al cargar los datos: $e';
+        isLoading = false;
+      });
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
-    return comunas.isEmpty
-        ? Center(child: CircularProgressIndicator())
-        : SingleChildScrollView(
-            padding: EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildStatsCard(),
-                SizedBox(height: 16),
-                Text(
-                  'Lista de Comunas',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  itemCount: comunas.length,
-                  itemBuilder: (context, index) {
-                    final comuna = comunas[index];
-                    return Card(
-                      elevation: 3,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                      child: ListTile(
-                        title: Text(comuna['nombre'] ?? 'Sin nombre'),
-                        subtitle: Text(
-                            comuna['parroquiaRelation']?['nombre'] ?? ''),
-                        trailing: Icon(Icons.arrow_forward_ios),
-                        onTap: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => ComunaDetalleScreen(
-                                      comuna: comuna)));
-                        },
+    if (isLoading) {
+      return Center(child: CircularProgressIndicator());
+    }
+
+    if (errorMessage.isNotEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error, size: 64, color: Colors.red),
+            SizedBox(height: 16),
+            Text(errorMessage, textAlign: TextAlign.center),
+            SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: loadComunasFromJson,
+              child: Text('Reintentar'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildStatsCard(),
+          SizedBox(height: 16),
+          Text(
+            'Lista de Comunas (${comunas.length})',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 8),
+          ListView.builder(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            itemCount: comunas.length,
+            itemBuilder: (context, index) {
+              final comuna = comunas[index];
+              return Card(
+                elevation: 3,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                margin: EdgeInsets.symmetric(vertical: 4),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: Colors.blue.shade100,
+                    child: Text(
+                      '${index + 1}',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  title: Text(comuna['nombre'] ?? 'Sin nombre'),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: 4),
+                      Text('Código: ${comuna['codigo'] ?? 'N/A'}'),
+                      SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Chip(
+                            label: Text(
+                              '${comuna['cantidadConsejosComunales']} consejos',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                            backgroundColor: Colors.blue.shade50,
+                          ),
+                          SizedBox(width: 4),
+                          Chip(
+                            label: Text(
+                              '${comuna['poblacionVotante']} votantes',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                            backgroundColor: Colors.green.shade50,
+                          ),
+                        ],
                       ),
-                    );
+                    ],
+                  ),
+                  trailing: Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => ComunaDetalleScreen(
+                                comuna: comuna)));
                   },
                 ),
-              ],
-            ),
-          );
+              );
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildStatsCard() {
@@ -94,7 +151,7 @@ Future<void> fetchComunas() async {
       children: [
         _statCard('Consejos Comunales', totalConsejos.toString(),
             Icons.groups, Colors.blueAccent),
-        _statCard('Población Votante', totalVotantes.toString(),
+        _statCard('Población Votante', _formatNumber(totalVotantes),
             Icons.how_to_vote, Colors.deepPurple),
       ],
     );
@@ -121,10 +178,19 @@ Future<void> fetchComunas() async {
                     fontWeight: FontWeight.bold,
                     color: color)),
             SizedBox(height: 4),
-            Text(title, style: TextStyle(fontSize: 14, color: color)),
+            Text(title, 
+                style: TextStyle(fontSize: 14, color: color),
+                textAlign: TextAlign.center),
           ],
         ),
       ),
     );
+  }
+
+  String _formatNumber(int number) {
+    if (number > 1000) {
+      return '${(number / 1000).toStringAsFixed(1)}K';
+    }
+    return number.toString();
   }
 }

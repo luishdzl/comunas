@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'login_screen.dart'; // Importa la nueva pantalla de login
+import 'login_screen.dart';
 import 'screens/menu/comunas_screen.dart';
 import 'screens/proyectos/proyecto_screen.dart';
 import 'screens/vehiculos/vehiculo__screen.dart';
+import 'screens/reportes/reportes_screen.dart'; // Nueva importación
+import 'screens/mapas/mapas_screen.dart'; // Nueva importación
 
 void main() => runApp(MyApp());
 
@@ -21,6 +23,7 @@ class _MyAppState extends State<MyApp> {
       title: 'Comunas App',
       theme: ThemeData(
         primarySwatch: Colors.blue,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: _isAuthenticated
           ? HomeScreen(onLogout: () => setState(() => _isAuthenticated = false))
@@ -51,12 +54,16 @@ class _HomeScreenState extends State<HomeScreen> {
     ComunasScreen(),
     ProyectoScreen(),
     VehiculoScreen(),
+    ReportesScreen(), // Nueva pantalla
+    MapasScreen(),    // Nueva pantalla
   ];
 
   final List<String> _titles = [
     'Ministerio de Comunas',
     'Proyectos',
     'Vehículos',
+    'Reportes y Estadísticas', // Nuevo título
+    'Mapas y Georreferenciación', // Nuevo título
   ];
 
   void _onItemTapped(int index) {
@@ -68,6 +75,9 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_titles[_selectedIndex]),
+        backgroundColor: Colors.blue[800],
+        foregroundColor: Colors.white,
+        elevation: 2,
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -81,11 +91,14 @@ class _HomeScreenState extends State<HomeScreen> {
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         selectedItemColor: Colors.blue[800],
-        unselectedItemColor: Colors.grey,
+        unselectedItemColor: Colors.grey[600],
+        backgroundColor: Colors.white,
+        type: BottomNavigationBarType.fixed,
+        elevation: 8,
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.menu),
-            label: 'Menú',
+            icon: Icon(Icons.home),
+            label: 'Inicio',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.work_outline),
@@ -94,6 +107,14 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.directions_car),
             label: 'Vehículos',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.analytics),
+            label: 'Reportes',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.map),
+            label: 'Mapas',
           ),
         ],
       ),

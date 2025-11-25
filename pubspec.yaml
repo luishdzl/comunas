@@ -59,6 +59,9 @@ flutter:
   assets:
     - lib/assets/comuna2.png
     - lib/assets/funacomunal.png
+    - lib/assets/comunas.json
+    - lib/assets/proyectos.json
+    - lib/assets/vehiculos.json
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution "variants", see

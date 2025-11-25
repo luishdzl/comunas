@@ -1,0 +1,158 @@
+[
+  {
+    "id": 1,
+    "codigo": "COM-001",
+    "numComisionPromotora": "CP-2023-001",
+    "fechaComisionPromotora": "2023-01-15T00:00:00.000Z",
+    "rif": "J-12345678-9",
+    "cuentaBancaria": "0102-0456-78-1234567890",
+    "fechaRegistro": "2023-02-01T00:00:00.000Z",
+    "nombre": "Comuna El Paraíso",
+    "direccion": "Av. Principal El Paraíso, entre calles 3 y 4",
+    "linderoNorte": "Av. Panteón",
+    "linderoSur": "Calle El Recreo",
+    "linderoEste": "Quebrada Chacaíto",
+    "linderoOeste": "Av. José Ángel Lamas",
+    "consejosComunales": [
+      {
+        "id": 1,
+        "nombre": "Consejo Comunal El Paraíso Norte",
+        "fechaConstitucion": "2023-03-10T00:00:00.000Z"
+      },
+      {
+        "id": 2,
+        "nombre": "Consejo Comunal El Paraíso Sur",
+        "fechaConstitucion": "2023-03-15T00:00:00.000Z"
+      }
+    ],
+    "fechaUltimaEleccion": "2023-03-10T00:00:00.000Z",
+    "parroquiaId": 1,
+    "cantidadConsejosComunales": 12,
+    "poblacionVotante": 8450,
+    "bancoDeLaComuna": [
+      {
+        "id": 1,
+        "nombreBanco": "Banco de Venezuela",
+        "numeroCuenta": "0102-0456-78-1234567890",
+        "tipoCuenta": "Corriente"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "codigo": "COM-002",
+    "numComisionPromotora": "CP-2023-002",
+    "fechaComisionPromotora": "2023-02-10T00:00:00.000Z",
+    "rif": "J-98765432-1",
+    "cuentaBancaria": "0102-0456-78-0987654321",
+    "fechaRegistro": "2023-02-28T00:00:00.000Z",
+    "nombre": "Comuna La Candelaria",
+    "direccion": "Esquina de Principal, frente a la Plaza Bolívar",
+    "linderoNorte": "Av. Universidad",
+    "linderoSur": "Calle La Bolsa",
+    "linderoEste": "Av. Baralt",
+    "linderoOeste": "Av. Sur 2",
+    "consejosComunales": [
+      {
+        "id": 3,
+        "nombre": "Consejo Comunal La Candelaria Centro",
+        "fechaConstitucion": "2023-04-01T00:00:00.000Z"
+      }
+    ],
+    "fechaUltimaEleccion": "2023-04-15T00:00:00.000Z",
+    "parroquiaId": 2,
+    "cantidadConsejosComunales": 8,
+    "poblacionVotante": 5200,
+    "bancoDeLaComuna": [
+      {
+        "id": 2,
+        "nombreBanco": "Banesco",
+        "numeroCuenta": "0134-0456-78-1122334455",
+        "tipoCuenta": "Ahorro"
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "codigo": "COM-003",
+    "numComisionPromotora": "CP-2023-003",
+    "fechaComisionPromotora": "2023-03-05T00:00:00.000Z",
+    "rif": "J-11223344-5",
+    "cuentaBancaria": "0102-0456-78-1122334455",
+    "fechaRegistro": "2023-03-20T00:00:00.000Z",
+    "nombre": "Comuna San Agustín",
+    "direccion": "Sector El Manguito, calle principal",
+    "linderoNorte": "Av. San Martín",
+    "linderoSur": "Cementerio General",
+    "linderoEste": "Av. Baralt",
+    "linderoOeste": "Quebrada Caroata",
+    "consejosComunales": [
+      {
+        "id": 4,
+        "nombre": "Consejo Comunal San Agustín Norte",
+        "fechaConstitucion": "2023-05-10T00:00:00.000Z"
+      },
+      {
+        "id": 5,
+        "nombre": "Consejo Comunal San Agustín Sur",
+        "fechaConstitucion": "2023-05-15T00:00:00.000Z"
+      },
+      {
+        "id": 6,
+        "nombre": "Consejo Comunal El Manguito",
+        "fechaConstitucion": "2023-05-20T00:00:00.000Z"
+      }
+    ],
+    "fechaUltimaEleccion": "2023-05-10T00:00:00.000Z",
+    "parroquiaId": 3,
+    "cantidadConsejosComunales": 15,
+    "poblacionVotante": 12300,
+    "bancoDeLaComuna": [
+      {
+        "id": 3,
+        "nombreBanco": "Banco Mercantil",
+        "numeroCuenta": "0105-0456-78-5566778899",
+        "tipoCuenta": "Corriente"
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "codigo": "COM-004",
+    "numComisionPromotora": "CP-2023-004",
+    "fechaComisionPromotora": "2023-01-20T00:00:00.000Z",
+    "rif": "J-55667788-9",
+    "cuentaBancaria": "0102-0456-78-5566778899",
+    "fechaRegistro": "2023-02-05T00:00:00.000Z",
+    "nombre": "Comuna Altamira",
+    "direccion": "Av. Francisco de Miranda, cruce con Av. Luis Roche",
+    "linderoNorte": "Av. Luis Roche",
+    "linderoSur": "Av. Francisco de Miranda",
+    "linderoEste": "Av. San Juan Bosco",
+    "linderoOeste": "Av. Abraham Lincoln",
+    "consejosComunales": [
+      {
+        "id": 7,
+        "nombre": "Consejo Comunal Altamira Este",
+        "fechaConstitucion": "2023-03-25T00:00:00.000Z"
+      },
+      {
+        "id": 8,
+        "nombre": "Consejo Comunal Altamira Oeste",
+        "fechaConstitucion": "2023-03-30T00:00:00.000Z"
+      }
+    ],
+    "fechaUltimaEleccion": "2023-03-25T00:00:00.000Z",
+    "parroquiaId": 4,
+    "cantidadConsejosComunales": 6,
+    "poblacionVotante": 6800,
+    "bancoDeLaComuna": [
+      {
+        "id": 4,
+        "nombreBanco": "Banco Provincial",
+        "numeroCuenta": "0108-0456-78-9988776655",
+        "tipoCuenta": "Corriente"
+      }
+    ]
+  }
+]
