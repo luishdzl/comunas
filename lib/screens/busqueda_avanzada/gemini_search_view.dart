@@ -1,5 +1,10 @@
-import 'package:flutter/material.dart';
 import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:csv/csv.dart';
 import 'gemini_service.dart';
 
 class GeminiSearchView extends StatefulWidget {
@@ -14,14 +19,15 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
   Map<String, dynamic>? _searchResults;
   bool _isLoading = false;
   String _errorMessage = '';
-  Map<String, dynamic>? _selectedItem;
   bool _dataLoaded = false;
+  
+  // Variables para selección múltiple
+  Set<String> _selectedItems = Set<String>();
+  bool _isSelectionMode = false;
 
   // Variables responsive
   bool get _isSmallScreen => MediaQuery.of(context).size.width < 600;
   bool get _isVerySmallScreen => MediaQuery.of(context).size.width < 400;
-  double get _horizontalPadding => _isSmallScreen ? 12.0 : 16.0;
-  double get _verticalPadding => _isSmallScreen ? 8.0 : 16.0;
 
   @override
   void initState() {
@@ -72,7 +78,8 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
       _isLoading = true;
       _errorMessage = '';
       _searchResults = null;
-      _selectedItem = null;
+      _selectedItems.clear();
+      _isSelectionMode = false;
     });
 
     try {
@@ -173,15 +180,202 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
   }
 
   void _showItemDetails(Map<String, dynamic> item) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DetailScreen(item: item),
+      ),
+    );
+  }
+
+  void _toggleSelectionMode() {
     setState(() {
-      _selectedItem = item;
+      _isSelectionMode = !_isSelectionMode;
+      if (!_isSelectionMode) {
+        _selectedItems.clear();
+      }
+    });
+  }
+
+  void _toggleItemSelection(String itemId) {
+    setState(() {
+      if (_selectedItems.contains(itemId)) {
+        _selectedItems.remove(itemId);
+      } else {
+        _selectedItems.add(itemId);
+      }
+      
+      if (_selectedItems.isEmpty) {
+        _isSelectionMode = false;
+      }
+    });
+  }
+
+  void _selectAllItems() {
+    setState(() {
+      if (_searchResults != null && _searchResults!['data'] is List) {
+        final data = _searchResults!['data'] as List;
+        for (int i = 0; i < data.length; i++) {
+          _selectedItems.add('item_$i');
+        }
+        _isSelectionMode = true;
+      }
     });
   }
 
   void _clearSelection() {
     setState(() {
-      _selectedItem = null;
+      _selectedItems.clear();
+      _isSelectionMode = false;
     });
+  }
+
+  Future<void> _exportToExcel() async {
+    if (_selectedItems.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Selecciona al menos un item para exportar')),
+      );
+      return;
+    }
+
+    try {
+      // Para Android/iOS, solicitar permisos
+      if (Platform.isAndroid || Platform.isIOS) {
+        var status = await Permission.storage.status;
+        if (!status.isGranted) {
+          await Permission.storage.request();
+        }
+      }
+
+      final data = _searchResults!['data'] as List;
+      final selectedIndexes = _selectedItems.map((id) => int.parse(id.split('_')[1])).toList();
+      final selectedData = selectedIndexes.map((index) => data[index]).toList();
+      
+      // Crear contenido CSV
+      String csvContent = _convertToCsv(selectedData, _searchResults!['type']);
+      
+      // Guardar archivo temporalmente
+      final directory = await getTemporaryDirectory();
+      final file = File('${directory.path}/exportacion_${DateTime.now().millisecondsSinceEpoch}.csv');
+      await file.writeAsString(csvContent);
+      
+      // Compartir el archivo
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        text: 'Exportación de datos - ${DateTime.now().toString()}',
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('✅ Archivo exportado y listo para compartir')),
+      );
+
+      _clearSelection();
+
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('❌ Error al exportar: $e')),
+      );
+    }
+  }
+
+  String _convertToCsv(List<dynamic> data, String type) {
+    switch (type) {
+      case 'vehiculos':
+        return _buildVehiculosCsv(data);
+      case 'proyectos':
+        return _buildProyectosCsv(data);
+      case 'comunas':
+        return _buildComunasCsv(data);
+      default:
+        return _buildGenericCsv(data, type);
+    }
+  }
+
+  String _buildVehiculosCsv(List<dynamic> data) {
+    List<List<dynamic>> rows = [];
+    // Encabezados
+    rows.add(['Marca', 'Cantidad', 'Placa', 'Modelo', 'Clase', 'Estatus', 'Comuna', 'Observacion']);
+    
+    for (var item in data) {
+      final marca = item['marca']?.toString() ?? '';
+      final cantidad = item['cantidad']?.toString() ?? '';
+      final vehiculos = item['vehiculos'] as List? ?? [];
+      
+      for (var vehiculo in vehiculos) {
+        rows.add([
+          marca,
+          cantidad,
+          vehiculo['placa'] ?? '',
+          vehiculo['modelo'] ?? '',
+          vehiculo['clase'] ?? '',
+          vehiculo['estatus'] ?? '',
+          vehiculo['comuna'] ?? '',
+          vehiculo['observacion'] ?? ''
+        ]);
+      }
+    }
+    
+    return const ListToCsvConverter().convert(rows);
+  }
+
+  String _buildProyectosCsv(List<dynamic> data) {
+    List<List<dynamic>> rows = [];
+    // Encabezados
+    rows.add(['Categoria', 'Cantidad', 'ID', 'Nombre', 'Estatus', 'Comuna', 'Familias Beneficiadas', 'Ultima Actividad']);
+    
+    for (var item in data) {
+      final categoria = item['categoria']?.toString() ?? '';
+      final cantidad = item['cantidad']?.toString() ?? '';
+      final proyectos = item['proyectos'] as List? ?? [];
+      
+      for (var proyecto in proyectos) {
+        rows.add([
+          categoria,
+          cantidad,
+          proyecto['id'] ?? '',
+          proyecto['nombre'] ?? '',
+          proyecto['estatus'] ?? '',
+          proyecto['comuna'] ?? '',
+          proyecto['familiasBeneficiadas'] ?? '',
+          proyecto['ultimaActividad'] ?? ''
+        ]);
+      }
+    }
+    
+    return const ListToCsvConverter().convert(rows);
+  }
+
+  String _buildComunasCsv(List<dynamic> data) {
+    List<List<dynamic>> rows = [];
+    // Encabezados
+    rows.add(['Nombre', 'Consejos Comunales', 'Poblacion Votante', 'Proyectos Activos']);
+    
+    for (var item in data) {
+      rows.add([
+        item['nombre'] ?? '',
+        item['consejosComunales'] ?? '',
+        item['poblacionVotante'] ?? '',
+        item['proyectosActivos'] ?? ''
+      ]);
+    }
+    
+    return const ListToCsvConverter().convert(rows);
+  }
+
+  String _buildGenericCsv(List<dynamic> data, String type) {
+    List<List<dynamic>> rows = [];
+    rows.add(['Tipo', 'Index', 'Valor']);
+    
+    for (var i = 0; i < data.length; i++) {
+      final item = data[i];
+      rows.add([
+        type,
+        i + 1,
+        item.toString()
+      ]);
+    }
+    
+    return const ListToCsvConverter().convert(rows);
   }
 
   Widget _buildSearchInput() {
@@ -222,7 +416,6 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
               ),
             ],
             const SizedBox(height: 16),
-            // Diseño responsive para el campo de búsqueda
             if (_isVerySmallScreen) 
               _buildVerticalSearchLayout()
             else 
@@ -256,7 +449,8 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
                         _searchController.clear();
                         setState(() {
                           _searchResults = null;
-                          _selectedItem = null;
+                          _selectedItems.clear();
+                          _isSelectionMode = false;
                         });
                       },
                     )
@@ -319,7 +513,8 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
                       _searchController.clear();
                       setState(() {
                         _searchResults = null;
-                        _selectedItem = null;
+                        _selectedItems.clear();
+                        _isSelectionMode = false;
                       });
                     },
                   )
@@ -396,11 +591,68 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
       children: [
         if (summary != null && summary != 'Resumen no disponible')
           _buildSummaryCard(summary),
+        if (_isSelectionMode) _buildSelectionToolbar(),
         const SizedBox(height: 12),
         Expanded(
           child: _buildStructuredResults(type, data),
         ),
       ],
+    );
+  }
+
+  Widget _buildSelectionToolbar() {
+    return Card(
+      color: Colors.blue[50],
+      margin: EdgeInsets.symmetric(
+        horizontal: _isSmallScreen ? 4 : 8,
+        vertical: 8,
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(_isSmallScreen ? 8 : 12),
+        child: Row(
+          children: [
+            Icon(
+              Icons.check_circle,
+              color: Colors.blue[700],
+              size: _isSmallScreen ? 18 : 24,
+            ),
+            SizedBox(width: _isSmallScreen ? 6 : 8),
+            Text(
+              '${_selectedItems.length} seleccionados',
+              style: TextStyle(
+                color: Colors.blue[700],
+                fontWeight: FontWeight.bold,
+                fontSize: _isSmallScreen ? 14 : 16,
+              ),
+            ),
+            Spacer(),
+            if (_selectedItems.isNotEmpty)
+              TextButton.icon(
+                onPressed: _exportToExcel,
+                icon: Icon(Icons.download, size: _isSmallScreen ? 16 : 20),
+                label: Text(
+                  'Exportar',
+                  style: TextStyle(fontSize: _isSmallScreen ? 14 : 16),
+                ),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.green[700],
+                ),
+              ),
+            SizedBox(width: _isSmallScreen ? 8 : 12),
+            TextButton.icon(
+              onPressed: _clearSelection,
+              icon: Icon(Icons.clear, size: _isSmallScreen ? 16 : 20),
+              label: Text(
+                'Cancelar',
+                style: TextStyle(fontSize: _isSmallScreen ? 14 : 16),
+              ),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red[700],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -577,25 +829,29 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
   }
 
   Widget _buildResultCard(String type, dynamic item, int index) {
+    final itemId = 'item_$index';
+    final isSelected = _selectedItems.contains(itemId);
+
     switch (type) {
       case 'vehiculos':
-        return _buildVehiculoCard(item, index);
+        return _buildVehiculoCard(item, index, isSelected, itemId);
       case 'proyectos':
-        return _buildProyectoCard(item, index);
+        return _buildProyectoCard(item, index, isSelected, itemId);
       case 'comunas':
-        return _buildComunaCard(item, index);
+        return _buildComunaCard(item, index, isSelected, itemId);
       default:
-        return _buildGenericCard(item, index, type);
+        return _buildGenericCard(item, index, type, isSelected, itemId);
     }
   }
 
-  Widget _buildVehiculoCard(dynamic item, int index) {
+  Widget _buildVehiculoCard(dynamic item, int index, bool isSelected, String itemId) {
     final marca = item['marca']?.toString() ?? 'Marca no especificada';
     final cantidad = item['cantidad'] ?? 0;
     final vehiculos = item['vehiculos'] as List? ?? [];
 
     return Card(
       elevation: 2,
+      color: isSelected ? Colors.blue[50] : null,
       child: Padding(
         padding: EdgeInsets.all(_isSmallScreen ? 12 : 16),
         child: Column(
@@ -603,6 +859,11 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
           children: [
             Row(
               children: [
+                if (_isSelectionMode) 
+                  Checkbox(
+                    value: isSelected,
+                    onChanged: (_) => _toggleItemSelection(itemId),
+                  ),
                 Icon(
                   Icons.directions_car, 
                   color: Colors.blue[600],
@@ -632,7 +893,9 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
             ),
             SizedBox(height: _isSmallScreen ? 8 : 12),
             if (vehiculos.isNotEmpty) 
-              ...vehiculos.map((vehiculo) => _buildVehiculoItem(vehiculo)).toList(),
+              ...vehiculos.asMap().entries.map((entry) => 
+                _buildVehiculoItem(entry.value, index, entry.key)
+              ).toList(),
             if (vehiculos.isEmpty)
               Text(
                 'No hay vehículos detallados',
@@ -647,7 +910,7 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
     );
   }
 
-  Widget _buildVehiculoItem(Map<String, dynamic> vehiculo) {
+  Widget _buildVehiculoItem(Map<String, dynamic> vehiculo, int parentIndex, int childIndex) {
     final placa = vehiculo['placa']?.toString() ?? 'Sin placa';
     final modelo = vehiculo['modelo']?.toString() ?? 'Modelo no especificado';
     final clase = vehiculo['clase']?.toString() ?? 'Clase no especificada';
@@ -707,17 +970,23 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
           'title': '$modelo - $placa',
           'data': vehiculo,
         }),
+        onLongPress: () {
+          if (!_isSelectionMode) {
+            _toggleSelectionMode();
+          }
+        },
       ),
     );
   }
 
-  Widget _buildProyectoCard(dynamic item, int index) {
+  Widget _buildProyectoCard(dynamic item, int index, bool isSelected, String itemId) {
     final categoria = item['categoria']?.toString() ?? 'Categoría no especificada';
     final cantidad = item['cantidad'] ?? 0;
     final proyectos = item['proyectos'] as List? ?? [];
 
     return Card(
       elevation: 2,
+      color: isSelected ? Colors.green[50] : null,
       child: Padding(
         padding: EdgeInsets.all(_isSmallScreen ? 12 : 16),
         child: Column(
@@ -725,6 +994,11 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
           children: [
             Row(
               children: [
+                if (_isSelectionMode) 
+                  Checkbox(
+                    value: isSelected,
+                    onChanged: (_) => _toggleItemSelection(itemId),
+                  ),
                 Icon(
                   Icons.work, 
                   color: Colors.green[600],
@@ -752,7 +1026,9 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
             ),
             SizedBox(height: _isSmallScreen ? 8 : 12),
             if (proyectos.isNotEmpty)
-              ...proyectos.map((proyecto) => _buildProyectoItem(proyecto)).toList(),
+              ...proyectos.asMap().entries.map((entry) => 
+                _buildProyectoItem(entry.value, index, entry.key)
+              ).toList(),
             if (proyectos.isEmpty)
               Text(
                 'No hay proyectos detallados',
@@ -767,7 +1043,7 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
     );
   }
 
-  Widget _buildProyectoItem(Map<String, dynamic> proyecto) {
+  Widget _buildProyectoItem(Map<String, dynamic> proyecto, int parentIndex, int childIndex) {
     final nombre = proyecto['nombre']?.toString() ?? 'Proyecto sin nombre';
     final estatus = proyecto['estatus']?.toString() ?? 'Estatus desconocido';
     final comuna = proyecto['comuna']?.toString();
@@ -827,11 +1103,16 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
           'title': nombre,
           'data': proyecto,
         }),
+        onLongPress: () {
+          if (!_isSelectionMode) {
+            _toggleSelectionMode();
+          }
+        },
       ),
     );
   }
 
-  Widget _buildComunaCard(dynamic item, int index) {
+  Widget _buildComunaCard(dynamic item, int index, bool isSelected, String itemId) {
     final nombre = item['nombre']?.toString() ?? 'Comuna sin nombre';
     final consejosComunales = item['consejosComunales'];
     final poblacionVotante = item['poblacionVotante'];
@@ -840,12 +1121,18 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
     return Card(
       elevation: 2,
       margin: EdgeInsets.zero,
+      color: isSelected ? Colors.orange[50] : null,
       child: ListTile(
-        leading: Icon(
-          Icons.location_city, 
-          color: Colors.orange[600],
-          size: _isSmallScreen ? 20 : 24,
-        ),
+        leading: _isSelectionMode 
+            ? Checkbox(
+                value: isSelected,
+                onChanged: (_) => _toggleItemSelection(itemId),
+              )
+            : Icon(
+                Icons.location_city, 
+                color: Colors.orange[600],
+                size: _isSmallScreen ? 20 : 24,
+              ),
         title: Text(
           nombre,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -873,7 +1160,7 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
               ),
           ],
         ),
-        trailing: Icon(
+        trailing: _isSelectionMode ? null : Icon(
           Icons.arrow_forward_ios, 
           size: _isSmallScreen ? 14 : 16
         ),
@@ -881,25 +1168,39 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
           horizontal: _isSmallScreen ? 12 : 16,
           vertical: _isSmallScreen ? 8 : 12,
         ),
-        onTap: () => _showItemDetails({
-          'type': 'comuna',
-          'title': nombre,
-          'data': item,
-        }),
+        onTap: _isSelectionMode 
+            ? () => _toggleItemSelection(itemId)
+            : () => _showItemDetails({
+                'type': 'comuna',
+                'title': nombre,
+                'data': item,
+              }),
+        onLongPress: () {
+          if (!_isSelectionMode) {
+            _toggleSelectionMode();
+            _toggleItemSelection(itemId);
+          }
+        },
       ),
     );
   }
 
-  Widget _buildGenericCard(dynamic item, int index, String type) {
+  Widget _buildGenericCard(dynamic item, int index, String type, bool isSelected, String itemId) {
     return Card(
       elevation: 2,
       margin: EdgeInsets.zero,
+      color: isSelected ? Colors.purple[50] : null,
       child: ListTile(
-        leading: Icon(
-          Icons.category, 
-          color: Colors.purple[600],
-          size: _isSmallScreen ? 20 : 24,
-        ),
+        leading: _isSelectionMode 
+            ? Checkbox(
+                value: isSelected,
+                onChanged: (_) => _toggleItemSelection(itemId),
+              )
+            : Icon(
+                Icons.category, 
+                color: Colors.purple[600],
+                size: _isSmallScreen ? 20 : 24,
+              ),
         title: Text(
           'Item ${index + 1}',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -911,7 +1212,7 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
           'Tipo: $type',
           style: TextStyle(fontSize: _isSmallScreen ? 12 : 14),
         ),
-        trailing: Icon(
+        trailing: _isSelectionMode ? null : Icon(
           Icons.arrow_forward_ios, 
           size: _isSmallScreen ? 14 : 16
         ),
@@ -919,145 +1220,21 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
           horizontal: _isSmallScreen ? 12 : 16,
           vertical: _isSmallScreen ? 8 : 12,
         ),
-        onTap: () => _showItemDetails({
-          'type': type,
-          'title': 'Item ${index + 1}',
-          'data': item is Map ? item : {'valor': item.toString()},
-        }),
+        onTap: _isSelectionMode 
+            ? () => _toggleItemSelection(itemId)
+            : () => _showItemDetails({
+                'type': type,
+                'title': 'Item ${index + 1}',
+                'data': item is Map ? item : {'valor': item.toString()},
+              }),
+        onLongPress: () {
+          if (!_isSelectionMode) {
+            _toggleSelectionMode();
+            _toggleItemSelection(itemId);
+          }
+        },
       ),
     );
-  }
-
-  Widget _buildItemDetails() {
-    if (_selectedItem == null) return const SizedBox();
-
-    final type = _selectedItem!['type'];
-    final title = _selectedItem!['title'];
-    final data = _selectedItem!['data'] as Map<String, dynamic>;
-
-    return Card(
-      elevation: 4,
-      margin: EdgeInsets.symmetric(
-        horizontal: _isSmallScreen ? 4 : 8,
-        vertical: 8,
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(_isSmallScreen ? 12 : 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    'Detalles del ${_getTypeName(type)}',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: _isSmallScreen ? 18 : 20,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(
-                    Icons.close,
-                    size: _isSmallScreen ? 20 : 24,
-                  ),
-                  onPressed: _clearSelection,
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-              ],
-            ),
-            SizedBox(height: _isSmallScreen ? 12 : 16),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Colors.blue[800],
-                fontSize: _isSmallScreen ? 16 : 18,
-              ),
-            ),
-            SizedBox(height: _isSmallScreen ? 12 : 16),
-            ..._buildDetailFields(data),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _getTypeName(String type) {
-    switch (type) {
-      case 'vehiculo': return 'Vehículo';
-      case 'proyecto': return 'Proyecto';
-      case 'comuna': return 'Comuna';
-      default: return 'Elemento';
-    }
-  }
-
-  List<Widget> _buildDetailFields(Map<String, dynamic> data) {
-    final fields = <Widget>[];
-    final validEntries = data.entries.where((entry) => 
-        entry.value != null && 
-        entry.key != 'type' && 
-        entry.key != 'title').toList();
-
-    if (validEntries.isEmpty) {
-      return [
-        SizedBox(height: _isSmallScreen ? 12 : 16),
-        Text(
-          'No hay información adicional disponible',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Colors.grey[600],
-            fontSize: _isSmallScreen ? 14 : 16,
-          ),
-          textAlign: TextAlign.center,
-        ),
-      ];
-    }
-
-    for (final entry in validEntries) {
-      fields.addAll([
-        SizedBox(height: _isSmallScreen ? 8 : 12),
-        Container(
-          padding: EdgeInsets.all(_isSmallScreen ? 10 : 12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey[300]!),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: 2,
-                child: Text(
-                  '${_capitalize(entry.key)}:',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: _isSmallScreen ? 14 : 16,
-                  ),
-                ),
-              ),
-              Expanded(
-                flex: 3,
-                child: Text(
-                  entry.value.toString(),
-                  style: TextStyle(fontSize: _isSmallScreen ? 14 : 16),
-                  textAlign: TextAlign.left,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ]);
-    }
-
-    return fields;
-  }
-
-  String _capitalize(String text) {
-    if (text.isEmpty) return text;
-    return text[0].toUpperCase() + text.substring(1);
   }
 
   @override
@@ -1067,6 +1244,14 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
         title: const Text('Búsqueda Inteligente'),
         backgroundColor: Colors.blue[700],
         foregroundColor: Colors.white,
+        actions: [
+          if (_searchResults != null && _searchResults!['type'] != 'text')
+            IconButton(
+              icon: Icon(_isSelectionMode ? Icons.deselect : Icons.select_all),
+              onPressed: _isSelectionMode ? _clearSelection : _selectAllItems,
+              tooltip: _isSelectionMode ? 'Cancelar selección' : 'Seleccionar todo',
+            ),
+        ],
       ),
       body: SafeArea(
         child: Padding(
@@ -1079,10 +1264,6 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
             children: [
               _buildSearchInput(),
               SizedBox(height: _isSmallScreen ? 16 : 20),
-              if (_selectedItem != null) ...[
-                _buildItemDetails(),
-                SizedBox(height: _isSmallScreen ? 16 : 20),
-              ],
               Expanded(
                 child: _isLoading && !_dataLoaded
                     ? const Center(child: CircularProgressIndicator())
@@ -1094,4 +1275,156 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
       ),
     );
   }
+}
+
+class DetailScreen extends StatelessWidget {
+  final Map<String, dynamic> item;
+
+  const DetailScreen({Key? key, required this.item}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final type = item['type'];
+    final title = item['title'];
+    final data = item['data'] as Map<String, dynamic>;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Detalles del ${_getTypeName(type)}'),
+        backgroundColor: Colors.blue[700],
+        foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.share),
+            onPressed: () => _shareDetails(context, item),
+            tooltip: 'Compartir detalles',
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Card(
+                elevation: 4,
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          color: Colors.blue[800],
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Tipo: ${_getTypeName(type)}',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 16),
+              ..._buildDetailFields(data),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildDetailFields(Map<String, dynamic> data) {
+    final fields = <Widget>[];
+    final validEntries = data.entries.where((entry) => 
+        entry.value != null).toList();
+
+    if (validEntries.isEmpty) {
+      return [
+        Card(
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Text(
+              'No hay información adicional disponible',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 16,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      ];
+    }
+
+    for (final entry in validEntries) {
+      fields.addAll([
+        SizedBox(height: 12),
+        Card(
+          elevation: 2,
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _capitalize(entry.key),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: Colors.blue[800],
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  entry.value.toString(),
+                  style: TextStyle(fontSize: 16),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ]);
+    }
+
+    return fields;
+  }
+
+  Future<void> _shareDetails(BuildContext context, Map<String, dynamic> item) async {
+    final type = item['type'];
+    final title = item['title'];
+    final data = item['data'] as Map<String, dynamic>;
+    
+    String shareText = 'Detalles del ${_getTypeName(type)}\n\n';
+    shareText += 'Título: $title\n\n';
+    
+    data.forEach((key, value) {
+      if (value != null) {
+        shareText += '${_capitalize(key)}: $value\n';
+      }
+    });
+    
+    await Share.share(shareText);
+  }
+}
+
+String _getTypeName(String type) {
+  switch (type) {
+    case 'vehiculo': return 'Vehículo';
+    case 'proyecto': return 'Proyecto';
+    case 'comuna': return 'Comuna';
+    default: return 'Elemento';
+  }
+}
+
+String _capitalize(String text) {
+  if (text.isEmpty) return text;
+  return text[0].toUpperCase() + text.substring(1);
 }
