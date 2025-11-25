@@ -5,6 +5,7 @@ import 'screens/proyectos/proyecto_screen.dart';
 import 'screens/vehiculos/vehiculo__screen.dart';
 import 'screens/reportes/reportes_screen.dart';
 import 'screens/mapas/mapas_screen.dart';
+import 'screens/busqueda_avanzada/gemini_search_view.dart';
 
 void main() => runApp(MyApp());
 
@@ -56,6 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
     VehiculoScreen(),
     ReportesScreen(),
     MapasScreen(),
+    GeminiSearchView(proyectosJson: '', comunasJson: '', vehiculosJson: '',),
   ];
 
   final List<String> _titles = [
@@ -64,6 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
     'Vehículos',
     'Reportes y Estadísticas',
     'Mapas y Georreferenciación',
+    'Búsqueda Avanzada', 
   ];
 
   void _onItemTapped(int index) {
@@ -116,6 +119,10 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.map),
             label: 'Mapas',
           ),
+          BottomNavigationBarItem(
+  icon: Icon(Icons.smart_toy), // Icono de IA/robot
+  label: 'Búsqueda IA',
+),
         ],
       ),
     );
