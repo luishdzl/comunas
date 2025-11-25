@@ -12,7 +12,7 @@
     "fechaDeEntrega": "2022-03-10T00:00:00.000Z",
     "estatus": "asignado",
     "observacionArchivo": "Documentación en regla",
-    "observacion": "Vehículo asignado para proyectos de infraestructura"
+    "observacion": "Vehículo asignado para proyectos de infraestructura - Comuna El Paraíso"
   },
   {
     "id": 2,
@@ -27,7 +27,7 @@
     "fechaDeEntrega": "2021-07-15T00:00:00.000Z",
     "estatus": "extraviado",
     "observacionArchivo": "Pendiente por renovar seguro",
-    "observacion": "Reportado como extraviado el mes pasado"
+    "observacion": "Reportado como extraviado el mes pasado - Última ubicación Comuna La Candelaria"
   },
   {
     "id": 3,
@@ -42,7 +42,7 @@
     "fechaDeEntrega": "2023-05-20T00:00:00.000Z",
     "estatus": "devuelto_a_caracas",
     "observacionArchivo": "Documentación completa",
-    "observacion": "Devuelto a sede central por rotación"
+    "observacion": "Devuelto a sede central por rotación - Anteriormente en Comuna San Agustín"
   },
   {
     "id": 4,
@@ -57,7 +57,7 @@
     "fechaDeEntrega": "2020-01-12T00:00:00.000Z",
     "estatus": "inactivo",
     "observacionArchivo": "En revisión legal",
-    "observacion": "Vehículo inactivo por falta de piezas"
+    "observacion": "Vehículo inactivo por falta de piezas - Comuna Altamira"
   },
   {
     "id": 5,
@@ -72,7 +72,7 @@
     "fechaDeEntrega": "2022-08-22T00:00:00.000Z",
     "estatus": "asignado",
     "observacionArchivo": "Todo en orden",
-    "observacion": "Asignado a comuna El Paraíso"
+    "observacion": "Asignado a Comuna El Paraíso para transporte de materiales"
   },
   {
     "id": 6,
@@ -87,6 +87,96 @@
     "fechaDeEntrega": "2021-11-30T00:00:00.000Z",
     "estatus": "devuelto_a_caracas",
     "observacionArchivo": "Mantenimiento requerido",
-    "observacion": "Devuelto para mantenimiento programado"
+    "observacion": "Devuelto para mantenimiento programado - Anterior Comuna La Candelaria"
+  },
+  {
+    "id": 7,
+    "placa": "STU901",
+    "clase": "Camioneta",
+    "marca": "Toyota",
+    "cc": "2700",
+    "modelo": "Tacoma",
+    "color": "Azul Marino",
+    "ano": 2023,
+    "serialCarroceria": "SC159753486",
+    "fechaDeEntrega": "2023-02-14T00:00:00.000Z",
+    "estatus": "asignado",
+    "observacionArchivo": "Seguro vigente hasta 2024",
+    "observacion": "Asignado a Comuna San Agustín para supervisión de proyectos"
+  },
+  {
+    "id": 8,
+    "placa": "VWX234",
+    "clase": "SUV",
+    "marca": "Hyundai",
+    "cc": "1800",
+    "modelo": "Tucson",
+    "color": "Plateado",
+    "ano": 2022,
+    "serialCarroceria": "SC357159486",
+    "fechaDeEntrega": "2022-09-05T00:00:00.000Z",
+    "estatus": "asignado",
+    "observacionArchivo": "Documentación al día",
+    "observacion": "Vehículo administrativo - Comuna Altamira"
+  },
+  {
+    "id": 9,
+    "placa": "YZA567",
+    "clase": "Pickup",
+    "marca": "Ford",
+    "cc": "2300",
+    "modelo": "Ranger",
+    "color": "Negro",
+    "ano": 2021,
+    "serialCarroceria": "SC753159486",
+    "fechaDeEntrega": "2021-12-20T00:00:00.000Z",
+    "estatus": "inactivo",
+    "observacionArchivo": "En taller por reparación mayor",
+    "observacion": "Motor en reparación - Comuna El Paraíso"
+  },
+  {
+    "id": 10,
+    "placa": "BCD890",
+    "clase": "Sedán",
+    "marca": "Kia",
+    "cc": "1500",
+    "modelo": "Rio",
+    "color": "Blanco",
+    "ano": 2023,
+    "serialCarroceria": "SC486753159",
+    "fechaDeEntrega": "2023-04-18T00:00:00.000Z",
+    "estatus": "asignado",
+    "observacionArchivo": "Todo en orden",
+    "observacion": "Vehículo para visitas técnicas - Comuna La Candelaria"
+  },
+  {
+    "id": 11,
+    "placa": "EFG123",
+    "clase": "Camioneta",
+    "marca": "Nissan",
+    "cc": "2500",
+    "modelo": "Frontier",
+    "color": "Rojo",
+    "ano": 2022,
+    "serialCarroceria": "SC159486753",
+    "fechaDeEntrega": "2022-11-08T00:00:00.000Z",
+    "estatus": "devuelto_a_caracas",
+    "observacionArchivo": "Revisión técnica pendiente",
+    "observacion": "Devuelto por cambio de asignación - Ex Comuna San Agustín"
+  },
+  {
+    "id": 12,
+    "placa": "HIJ456",
+    "clase": "Furgoneta",
+    "marca": "Ford",
+    "cc": "2200",
+    "modelo": "Transit",
+    "color": "Gris",
+    "ano": 2021,
+    "serialCarroceria": "SC753486159",
+    "fechaDeEntrega": "2021-06-30T00:00:00.000Z",
+    "estatus": "asignado",
+    "observacionArchivo": "Documentación completa",
+    "observacion": "Transporte de personal - Comuna Altamira"
   }
 ]

@@ -9,9 +9,9 @@
     "fechaRegistro": "2023-02-01T00:00:00.000Z",
     "nombre": "Comuna El Paraíso",
     "direccion": "Av. Principal El Paraíso, entre calles 3 y 4",
-    "linderoNorte": "Av. Panteón",
-    "linderoSur": "Calle El Recreo",
-    "linderoEste": "Quebrada Chacaíto",
+    "linderoNorte": "Comuna Altamira y Av. Panteón",
+    "linderoSur": "Comuna La Candelaria y Calle El Recreo",
+    "linderoEste": "Quebrada Chacaíto y Comuna San Agustín",
     "linderoOeste": "Av. José Ángel Lamas",
     "consejosComunales": [
       {
@@ -48,10 +48,10 @@
     "fechaRegistro": "2023-02-28T00:00:00.000Z",
     "nombre": "Comuna La Candelaria",
     "direccion": "Esquina de Principal, frente a la Plaza Bolívar",
-    "linderoNorte": "Av. Universidad",
+    "linderoNorte": "Comuna El Paraíso y Av. Universidad",
     "linderoSur": "Calle La Bolsa",
     "linderoEste": "Av. Baralt",
-    "linderoOeste": "Av. Sur 2",
+    "linderoOeste": "Comuna San Agustín y Av. Sur 2",
     "consejosComunales": [
       {
         "id": 3,
@@ -84,8 +84,8 @@
     "direccion": "Sector El Manguito, calle principal",
     "linderoNorte": "Av. San Martín",
     "linderoSur": "Cementerio General",
-    "linderoEste": "Av. Baralt",
-    "linderoOeste": "Quebrada Caroata",
+    "linderoEste": "Comuna La Candelaria y Av. Baralt",
+    "linderoOeste": "Comuna El Paraíso y Quebrada Caroata",
     "consejosComunales": [
       {
         "id": 4,
@@ -96,11 +96,6 @@
         "id": 5,
         "nombre": "Consejo Comunal San Agustín Sur",
         "fechaConstitucion": "2023-05-15T00:00:00.000Z"
-      },
-      {
-        "id": 6,
-        "nombre": "Consejo Comunal El Manguito",
-        "fechaConstitucion": "2023-05-20T00:00:00.000Z"
       }
     ],
     "fechaUltimaEleccion": "2023-05-10T00:00:00.000Z",
@@ -127,17 +122,17 @@
     "nombre": "Comuna Altamira",
     "direccion": "Av. Francisco de Miranda, cruce con Av. Luis Roche",
     "linderoNorte": "Av. Luis Roche",
-    "linderoSur": "Av. Francisco de Miranda",
+    "linderoSur": "Comuna El Paraíso y Av. Francisco de Miranda",
     "linderoEste": "Av. San Juan Bosco",
-    "linderoOeste": "Av. Abraham Lincoln",
+    "linderoOeste": "Comuna La Candelaria y Av. Abraham Lincoln",
     "consejosComunales": [
       {
-        "id": 7,
+        "id": 6,
         "nombre": "Consejo Comunal Altamira Este",
         "fechaConstitucion": "2023-03-25T00:00:00.000Z"
       },
       {
-        "id": 8,
+        "id": 7,
         "nombre": "Consejo Comunal Altamira Oeste",
         "fechaConstitucion": "2023-03-30T00:00:00.000Z"
       }
@@ -151,6 +146,405 @@
         "id": 4,
         "nombreBanco": "Banco Provincial",
         "numeroCuenta": "0108-0456-78-9988776655",
+        "tipoCuenta": "Corriente"
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "codigo": "COM-005",
+    "numComisionPromotora": "CP-2023-005",
+    "fechaComisionPromotora": "2023-04-10T00:00:00.000Z",
+    "rif": "J-99887766-5",
+    "cuentaBancaria": "0102-0456-78-4455667788",
+    "fechaRegistro": "2023-04-25T00:00:00.000Z",
+    "nombre": "Comuna La Vega",
+    "direccion": "Sector La Pedrera, av. principal",
+    "linderoNorte": "Comuna San Agustín",
+    "linderoSur": "Autopista Valle-Coche",
+    "linderoEste": "Quebrada La Vega",
+    "linderoOeste": "Comuna El Paraíso",
+    "consejosComunales": [
+      {
+        "id": 8,
+        "nombre": "Consejo Comunal La Vega Central",
+        "fechaConstitucion": "2023-06-01T00:00:00.000Z"
+      }
+    ],
+    "fechaUltimaEleccion": "2023-06-01T00:00:00.000Z",
+    "parroquiaId": 5,
+    "cantidadConsejosComunales": 9,
+    "poblacionVotante": 7500,
+    "bancoDeLaComuna": [
+      {
+        "id": 5,
+        "nombreBanco": "Banco Bicentenario",
+        "numeroCuenta": "0175-0456-78-3344556677",
+        "tipoCuenta": "Corriente"
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "codigo": "COM-006",
+    "numComisionPromotora": "CP-2023-006",
+    "fechaComisionPromotora": "2023-05-15T00:00:00.000Z",
+    "rif": "J-33445566-7",
+    "cuentaBancaria": "0102-0456-78-2233445566",
+    "fechaRegistro": "2023-05-30T00:00:00.000Z",
+    "nombre": "Comuna El Valle",
+    "direccion": "Av. Intercomunal del Valle",
+    "linderoNorte": "Comuna La Vega",
+    "linderoSur": "Cerro El Volcán",
+    "linderoEste": "Comuna Coche",
+    "linderoOeste": "Comuna San Agustín",
+    "consejosComunales": [
+      {
+        "id": 9,
+        "nombre": "Consejo Comunal El Valle Norte",
+        "fechaConstitucion": "2023-07-10T00:00:00.000Z"
+      },
+      {
+        "id": 10,
+        "nombre": "Consejo Comunal El Valle Sur",
+        "fechaConstitucion": "2023-07-15T00:00:00.000Z"
+      }
+    ],
+    "fechaUltimaEleccion": "2023-07-10T00:00:00.000Z",
+    "parroquiaId": 6,
+    "cantidadConsejosComunales": 11,
+    "poblacionVotante": 9200,
+    "bancoDeLaComuna": [
+      {
+        "id": 6,
+        "nombreBanco": "Banco del Tesoro",
+        "numeroCuenta": "0163-0456-78-4455667788",
+        "tipoCuenta": "Corriente"
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "codigo": "COM-007",
+    "numComisionPromotora": "CP-2023-007",
+    "fechaComisionPromotora": "2023-06-20T00:00:00.000Z",
+    "rif": "J-44556677-8",
+    "cuentaBancaria": "0102-0456-78-3344556677",
+    "fechaRegistro": "2023-07-05T00:00:00.000Z",
+    "nombre": "Comuna Coche",
+    "direccion": "Sector Los Erasos, av. principal",
+    "linderoNorte": "Comuna El Valle",
+    "linderoSur": "Autopista Regional del Centro",
+    "linderoEste": "Comuna Santa Rosalía",
+    "linderoOeste": "Comuna La Vega",
+    "consejosComunales": [
+      {
+        "id": 11,
+        "nombre": "Consejo Comunal Coche Central",
+        "fechaConstitucion": "2023-08-01T00:00:00.000Z"
+      }
+    ],
+    "fechaUltimaEleccion": "2023-08-01T00:00:00.000Z",
+    "parroquiaId": 7,
+    "cantidadConsejosComunales": 7,
+    "poblacionVotante": 6100,
+    "bancoDeLaComuna": [
+      {
+        "id": 7,
+        "nombreBanco": "Banco Plaza",
+        "numeroCuenta": "0114-0456-78-5566778899",
+        "tipoCuenta": "Ahorro"
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "codigo": "COM-008",
+    "numComisionPromotora": "CP-2023-008",
+    "fechaComisionPromotora": "2023-07-12T00:00:00.000Z",
+    "rif": "J-55667788-9",
+    "cuentaBancaria": "0102-0456-78-4455667788",
+    "fechaRegistro": "2023-07-28T00:00:00.000Z",
+    "nombre": "Comuna Santa Rosalía",
+    "direccion": "Av. Principal de Santa Rosalía",
+    "linderoNorte": "Comuna Coche",
+    "linderoSur": "Río Guaire",
+    "linderoEste": "Comuna El Recreo",
+    "linderoOeste": "Comuna El Valle",
+    "consejosComunales": [
+      {
+        "id": 12,
+        "nombre": "Consejo Comunal Santa Rosalía Este",
+        "fechaConstitucion": "2023-09-05T00:00:00.000Z"
+      },
+      {
+        "id": 13,
+        "nombre": "Consejo Comunal Santa Rosalía Oeste",
+        "fechaConstitucion": "2023-09-10T00:00:00.000Z"
+      }
+    ],
+    "fechaUltimaEleccion": "2023-09-05T00:00:00.000Z",
+    "parroquiaId": 8,
+    "cantidadConsejosComunales": 10,
+    "poblacionVotante": 7800,
+    "bancoDeLaComuna": [
+      {
+        "id": 8,
+        "nombreBanco": "Banco Exterior",
+        "numeroCuenta": "0115-0456-78-6677889900",
+        "tipoCuenta": "Corriente"
+      }
+    ]
+  },
+  {
+    "id": 9,
+    "codigo": "COM-009",
+    "numComisionPromotora": "CP-2023-009",
+    "fechaComisionPromotora": "2023-08-08T00:00:00.000Z",
+    "rif": "J-66778899-0",
+    "cuentaBancaria": "0102-0456-78-5566778899",
+    "fechaRegistro": "2023-08-23T00:00:00.000Z",
+    "nombre": "Comuna El Recreo",
+    "direccion": "Sector El Recreo, cerca del mercado",
+    "linderoNorte": "Comuna Santa Rosalía",
+    "linderoSur": "Av. Libertador",
+    "linderoEste": "Comuna Sabana Grande",
+    "linderoOeste": "Comuna Coche",
+    "consejosComunales": [
+      {
+        "id": 14,
+        "nombre": "Consejo Comunal El Recreo Norte",
+        "fechaConstitucion": "2023-10-01T00:00:00.000Z"
+      }
+    ],
+    "fechaUltimaEleccion": "2023-10-01T00:00:00.000Z",
+    "parroquiaId": 9,
+    "cantidadConsejosComunales": 8,
+    "poblacionVotante": 6900,
+    "bancoDeLaComuna": [
+      {
+        "id": 9,
+        "nombreBanco": "Banco Nacional de Crédito",
+        "numeroCuenta": "0191-0456-78-7788990011",
+        "tipoCuenta": "Corriente"
+      }
+    ]
+  },
+  {
+    "id": 10,
+    "codigo": "COM-010",
+    "numComisionPromotora": "CP-2023-010",
+    "fechaComisionPromotora": "2023-09-01T00:00:00.000Z",
+    "rif": "J-77889900-1",
+    "cuentaBancaria": "0102-0456-78-6677889900",
+    "fechaRegistro": "2023-09-16T00:00:00.000Z",
+    "nombre": "Comuna Sabana Grande",
+    "direccion": "Boulevard de Sabana Grande",
+    "linderoNorte": "Comuna El Recreo",
+    "linderoSur": "Comuna San Bernardino",
+    "linderoEste": "Comuna Chacao",
+    "linderoOeste": "Comuna Santa Rosalía",
+    "consejosComunales": [
+      {
+        "id": 15,
+        "nombre": "Consejo Comunal Sabana Grande Centro",
+        "fechaConstitucion": "2023-11-05T00:00:00.000Z"
+      },
+      {
+        "id": 16,
+        "nombre": "Consejo Comunal Sabana Grande Este",
+        "fechaConstitucion": "2023-11-10T00:00:00.000Z"
+      }
+    ],
+    "fechaUltimaEleccion": "2023-11-05T00:00:00.000Z",
+    "parroquiaId": 10,
+    "cantidadConsejosComunales": 13,
+    "poblacionVotante": 10500,
+    "bancoDeLaComuna": [
+      {
+        "id": 10,
+        "nombreBanco": "Banco Venezolano de Crédito",
+        "numeroCuenta": "0104-0456-78-8899001122",
+        "tipoCuenta": "Corriente"
+      }
+    ]
+  },
+  {
+    "id": 11,
+    "codigo": "COM-011",
+    "numComisionPromotora": "CP-2023-011",
+    "fechaComisionPromotora": "2023-10-10T00:00:00.000Z",
+    "rif": "J-88990011-2",
+    "cuentaBancaria": "0102-0456-78-7788990011",
+    "fechaRegistro": "2023-10-25T00:00:00.000Z",
+    "nombre": "Comuna San Bernardino",
+    "direccion": "Av. San Bernardino, sector hotelero",
+    "linderoNorte": "Comuna Sabana Grande",
+    "linderoSur": "Comuna El Paraíso",
+    "linderoEste": "Comuna La Candelaria",
+    "linderoOeste": "Comuna El Recreo",
+    "consejosComunales": [
+      {
+        "id": 17,
+        "nombre": "Consejo Comunal San Bernardino Norte",
+        "fechaConstitucion": "2023-12-01T00:00:00.000Z"
+      }
+    ],
+    "fechaUltimaEleccion": "2023-12-01T00:00:00.000Z",
+    "parroquiaId": 11,
+    "cantidadConsejosComunales": 5,
+    "poblacionVotante": 4200,
+    "bancoDeLaComuna": [
+      {
+        "id": 11,
+        "nombreBanco": "Banco Sofitasa",
+        "numeroCuenta": "0137-0456-78-9900112233",
+        "tipoCuenta": "Ahorro"
+      }
+    ]
+  },
+  {
+    "id": 12,
+    "codigo": "COM-012",
+    "numComisionPromotora": "CP-2023-012",
+    "fechaComisionPromotora": "2023-11-05T00:00:00.000Z",
+    "rif": "J-99001122-3",
+    "cuentaBancaria": "0102-0456-78-8899001122",
+    "fechaRegistro": "2023-11-20T00:00:00.000Z",
+    "nombre": "Comuna Chacao",
+    "direccion": "Av. Francisco de Miranda, sector Chacao",
+    "linderoNorte": "Comuna Sabana Grande",
+    "linderoSur": "Comuna Altamira",
+    "linderoEste": "Comuna Los Palos Grandes",
+    "linderoOeste": "Comuna San Bernardino",
+    "consejosComunales": [
+      {
+        "id": 18,
+        "nombre": "Consejo Comunal Chacao Este",
+        "fechaConstitucion": "2024-01-10T00:00:00.000Z"
+      },
+      {
+        "id": 19,
+        "nombre": "Consejo Comunal Chacao Oeste",
+        "fechaConstitucion": "2024-01-15T00:00:00.000Z"
+      }
+    ],
+    "fechaUltimaEleccion": "2024-01-10T00:00:00.000Z",
+    "parroquiaId": 12,
+    "cantidadConsejosComunales": 14,
+    "poblacionVotante": 11200,
+    "bancoDeLaComuna": [
+      {
+        "id": 12,
+        "nombreBanco": "Banco del Caribe",
+        "numeroCuenta": "0114-0456-78-0011223344",
+        "tipoCuenta": "Corriente"
+      }
+    ]
+  },
+  {
+    "id": 13,
+    "codigo": "COM-013",
+    "numComisionPromotora": "CP-2023-013",
+    "fechaComisionPromotora": "2023-12-12T00:00:00.000Z",
+    "rif": "J-00112233-4",
+    "cuentaBancaria": "0102-0456-78-9900112233",
+    "fechaRegistro": "2023-12-27T00:00:00.000Z",
+    "nombre": "Comuna Los Palos Grandes",
+    "direccion": "Av. Francisco de Miranda, Los Palos Grandes",
+    "linderoNorte": "Comuna Chacao",
+    "linderoSur": "Comuna La Castellana",
+    "linderoEste": "Comuna La Urbina",
+    "linderoOeste": "Comuna Altamira",
+    "consejosComunales": [
+      {
+        "id": 20,
+        "nombre": "Consejo Comunal Los Palos Grandes Norte",
+        "fechaConstitucion": "2024-02-05T00:00:00.000Z"
+      }
+    ],
+    "fechaUltimaEleccion": "2024-02-05T00:00:00.000Z",
+    "parroquiaId": 13,
+    "cantidadConsejosComunales": 9,
+    "poblacionVotante": 7300,
+    "bancoDeLaComuna": [
+      {
+        "id": 13,
+        "nombreBanco": "Banco Agrícola de Venezuela",
+        "numeroCuenta": "0005-0456-78-1122334455",
+        "tipoCuenta": "Corriente"
+      }
+    ]
+  },
+  {
+    "id": 14,
+    "codigo": "COM-014",
+    "numComisionPromotora": "CP-2023-014",
+    "fechaComisionPromotora": "2024-01-08T00:00:00.000Z",
+    "rif": "J-11223344-5",
+    "cuentaBancaria": "0102-0456-78-0011223344",
+    "fechaRegistro": "2024-01-23T00:00:00.000Z",
+    "nombre": "Comuna La Castellana",
+    "direccion": "Av. Principal de La Castellana",
+    "linderoNorte": "Comuna Los Palos Grandes",
+    "linderoSur": "Comuna El Paraíso",
+    "linderoEste": "Comuna La Florida",
+    "linderoOeste": "Comuna Chacao",
+    "consejosComunales": [
+      {
+        "id": 21,
+        "nombre": "Consejo Comunal La Castellana Sur",
+        "fechaConstitucion": "2024-03-01T00:00:00.000Z"
+      },
+      {
+        "id": 22,
+        "nombre": "Consejo Comunal La Castellana Norte",
+        "fechaConstitucion": "2024-03-05T00:00:00.000Z"
+      }
+    ],
+    "fechaUltimaEleccion": "2024-03-01T00:00:00.000Z",
+    "parroquiaId": 14,
+    "cantidadConsejosComunales": 7,
+    "poblacionVotante": 5800,
+    "bancoDeLaComuna": [
+      {
+        "id": 14,
+        "nombreBanco": "Banco de la Gente Emprendedora",
+        "numeroCuenta": "0007-0456-78-2233445566",
+        "tipoCuenta": "Ahorro"
+      }
+    ]
+  },
+  {
+    "id": 15,
+    "codigo": "COM-015",
+    "numComisionPromotora": "CP-2023-015",
+    "fechaComisionPromotora": "2024-02-14T00:00:00.000Z",
+    "rif": "J-22334455-6",
+    "cuentaBancaria": "0102-0456-78-1122334455",
+    "fechaRegistro": "2024-02-29T00:00:00.000Z",
+    "nombre": "Comuna La Florida",
+    "direccion": "Av. Principal La Florida",
+    "linderoNorte": "Comuna La Castellana",
+    "linderoSur": "Comuna El Valle",
+    "linderoEste": "Comuna Petare",
+    "linderoOeste": "Comuna Los Palos Grandes",
+    "consejosComunales": [
+      {
+        "id": 23,
+        "nombre": "Consejo Comunal La Florida Central",
+        "fechaConstitucion": "2024-04-10T00:00:00.000Z"
+      }
+    ],
+    "fechaUltimaEleccion": "2024-04-10T00:00:00.000Z",
+    "parroquiaId": 15,
+    "cantidadConsejosComunales": 11,
+    "poblacionVotante": 8900,
+    "bancoDeLaComuna": [
+      {
+        "id": 15,
+        "nombreBanco": "Banco Activo",
+        "numeroCuenta": "0171-0456-78-3344556677",
         "tipoCuenta": "Corriente"
       }
     ]
