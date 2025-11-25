@@ -2,17 +2,6 @@ import 'package:flutter/material.dart';
 import 'gemini_service.dart';
 
 class GeminiSearchView extends StatefulWidget {
-  final String proyectosJson;
-  final String comunasJson;
-  final String vehiculosJson;
-
-  const GeminiSearchView({
-    Key? key,
-    required this.proyectosJson,
-    required this.comunasJson,
-    required this.vehiculosJson,
-  }) : super(key: key);
-
   @override
   _GeminiSearchViewState createState() => _GeminiSearchViewState();
 }
@@ -25,6 +14,36 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
   bool _isLoading = false;
   String _errorMessage = '';
   Map<String, dynamic>? _selectedItem;
+  bool _dataLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeData();
+  }
+
+  Future<void> _initializeData() async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+      
+      await GeminiService.initialize();
+      
+      setState(() {
+        _isLoading = false;
+        _dataLoaded = true;
+      });
+      
+      print('📊 Estado de datos: ${GeminiService.getDataStatus()}');
+      
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Error cargando datos: $e';
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -35,6 +54,12 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
 
   Future<void> _performSearch() async {
     if (_searchController.text.trim().isEmpty) return;
+    if (!_dataLoaded) {
+      setState(() {
+        _errorMessage = 'Los datos aún no están cargados';
+      });
+      return;
+    }
 
     setState(() {
       _isLoading = true;
@@ -46,9 +71,6 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
     try {
       final results = await GeminiService.queryData(
         userQuery: _searchController.text.trim(),
-        proyectosJson: widget.proyectosJson,
-        comunasJson: widget.comunasJson,
-        vehiculosJson: widget.vehiculosJson,
       );
 
       setState(() {
@@ -73,6 +95,7 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
     }
   }
 
+  // Métodos que faltaban
   void _showItemDetails(Map<String, dynamic> item) {
     setState(() {
       _selectedItem = item;
@@ -107,6 +130,15 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
                 color: Colors.grey[600],
               ),
             ),
+            if (!_dataLoaded) ...[
+              const SizedBox(height: 8),
+              Text(
+                '⚠️ Cargando datos...',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.orange[800],
+                ),
+              ),
+            ],
             const SizedBox(height: 16),
             Row(
               children: [
@@ -137,6 +169,7 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
                           : null,
                     ),
                     onSubmitted: (_) => _performSearch(),
+                    enabled: _dataLoaded && !_isLoading,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -145,7 +178,7 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
                   child: _isLoading
                       ? const CircularProgressIndicator()
                       : ElevatedButton(
-                          onPressed: _performSearch,
+                          onPressed: _dataLoaded ? _performSearch : null,
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 24,
@@ -524,9 +557,11 @@ class _GeminiSearchViewState extends State<GeminiSearchView> {
               const SizedBox(height: 20),
             ],
             Expanded(
-              child: SingleChildScrollView(
-                child: _buildResults(),
-              ),
+              child: _isLoading && !_dataLoaded
+                  ? const Center(child: CircularProgressIndicator())
+                  : SingleChildScrollView(
+                      child: _buildResults(),
+                    ),
             ),
           ],
         ),

@@ -57,7 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
     VehiculoScreen(),
     ReportesScreen(),
     MapasScreen(),
-    GeminiSearchView(proyectosJson: '', comunasJson: '', vehiculosJson: '',),
+    GeminiSearchView(),
   ];
 
   final List<String> _titles = [

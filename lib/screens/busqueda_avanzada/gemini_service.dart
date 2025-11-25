@@ -1,23 +1,86 @@
 // gemini_service.dart
 import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
 
 class GeminiService {
   static const String _apiKey = 'AIzaSyC_dxZRgrNsljTBwKF9U60WACoMy4J9z40'; 
   static const String _baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent';
 
+  // Variables para almacenar los JSONs cargados
+  static String? _proyectosJson;
+  static String? _comunasJson;
+  static String? _vehiculosJson;
+  static bool _isInitialized = false;
+
+  // Método para inicializar y cargar todos los JSONs
+  static Future<void> initialize() async {
+    if (_isInitialized) return;
+    
+    try {
+      print('📂 Cargando archivos JSON...');
+      
+      _proyectosJson = await _loadJsonFile('lib/assets/proyectos.json');
+      _comunasJson = await _loadJsonFile('lib/assets/comunas.json');
+      _vehiculosJson = await _loadJsonFile('lib/assets/vehiculos.json');
+      
+      _isInitialized = true;
+      print('✅ Archivos JSON cargados exitosamente');
+      print('📊 Proyectos: ${_proyectosJson?.length ?? 0} caracteres');
+      print('📊 Comunas: ${_comunasJson?.length ?? 0} caracteres');
+      print('📊 Vehículos: ${_vehiculosJson?.length ?? 0} caracteres');
+      
+    } catch (e) {
+      print('❌ Error cargando archivos JSON: $e');
+      rethrow;
+    }
+  }
+
+  // Método para cargar un archivo JSON
+  static Future<String> _loadJsonFile(String path) async {
+    try {
+      return await rootBundle.loadString(path);
+    } catch (e) {
+      print('❌ Error cargando $path: $e');
+      // Si falla con rootBundle, intentar con File (para debugging)
+      try {
+        final file = File(path);
+        if (await file.exists()) {
+          return await file.readAsString();
+        }
+      } catch (e2) {
+        print('❌ También falló carga con File: $e2');
+      }
+      rethrow;
+    }
+  }
+
+  // Método principal de consulta modificado
   static Future<Map<String, dynamic>> queryData({
     required String userQuery,
-    required String proyectosJson,
-    required String comunasJson,
-    required String vehiculosJson,
   }) async {
     try {
+      // Verificar que los JSONs estén cargados
+      if (!_isInitialized) {
+        await initialize();
+      }
+
+      // Verificar que tenemos todos los datos
+      if (_proyectosJson == null || _comunasJson == null || _vehiculosJson == null) {
+        throw Exception('No se pudieron cargar los archivos JSON');
+      }
+
       print('🔍 Iniciando consulta a Gemini 2.0 Flash Lite...');
       print('📝 Query: $userQuery');
       
       final url = Uri.parse('$_baseUrl?key=$_apiKey');
-      final prompt = _buildStructuredPrompt(userQuery, proyectosJson, comunasJson, vehiculosJson);
+      final prompt = _buildStructuredPrompt(
+        userQuery, 
+        _proyectosJson!, 
+        _comunasJson!, 
+        _vehiculosJson!
+      );
       
       print('📤 Enviando request...');
       
@@ -77,6 +140,7 @@ class GeminiService {
         }
       } else {
         print('❌ Error HTTP: ${response.statusCode}');
+        print('❌ Response body: ${response.body}');
         return {
           'type': 'error',
           'data': '❌ Error HTTP ${response.statusCode}',
@@ -87,10 +151,23 @@ class GeminiService {
       print('❌ Error en GeminiService: $e');
       return {
         'type': 'error',
-        'data': '❌ Error de conexión: $e',
+        'data': '❌ Error en el servicio: $e',
         'rawText': 'Error de conexión'
       };
     }
+  }
+
+  // Método para verificar el estado de los datos
+  static Map<String, dynamic> getDataStatus() {
+    return {
+      'initialized': _isInitialized,
+      'proyectos_loaded': _proyectosJson != null,
+      'comunas_loaded': _comunasJson != null,
+      'vehiculos_loaded': _vehiculosJson != null,
+      'proyectos_length': _proyectosJson?.length ?? 0,
+      'comunas_length': _comunasJson?.length ?? 0,
+      'vehiculos_length': _vehiculosJson?.length ?? 0,
+    };
   }
 
   static String _buildStructuredPrompt(
